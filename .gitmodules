@@ -1,0 +1,3 @@
+[submodule "ba-graph"]
+	path = ba-graph
+	url = https://github.com/ba-graph-research/ba-graph.git
