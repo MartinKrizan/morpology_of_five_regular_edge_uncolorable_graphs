@@ -8,8 +8,11 @@ All of them have connectivity < 4. After splitting graph into two components by 
 
 
 TODO: pozriet tych 8 co nie su overful
+
 Graph: O~zPw[@?O@_E?J?J?BW?n
+
 Uncol part: G~zPw[
+
 Critical part: F~zPw
 
 
