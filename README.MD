@@ -1,4 +1,4 @@
-# Morphology 5-colorability experiments
+# Morphology of 5-regular uncolorable graphs
 
 ## Uncolorable graphs on 16 vertices
 
