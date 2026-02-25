@@ -6,6 +6,34 @@ All uncolorable 5-regular graphs on 16 vertices are listed in the file `results/
 
 All of them have connectivity < 4. After splitting graph into two components by minimal cut one component is always uncolorable. Uncolorability of almost all of those component comes from number of vertices and edges in that component. That component is overfull.
 
+## Each 5-regular graph with EC < 5 that can be split into two components of odd size is uncolorable
+
+Each 5-regular graph with edge connectivity less than 5 that can be split by a minimum cut into two components with an odd number of vertices is uncolorable.
+
+### Proof:
+
+Let G be a 5 regular graph with N number of vertices and let C be size of minimal cut. Let G1 and G2 be components of G after removing cut.
+
+(BUNV) Number of edges E in G1 is (|G1|*5 - C)/2
+
+After adding this to overful formula we get:
+
+$$
+|E| > \Delta(G) * \lfloor |V|/2 \rfloor
+$$
+
+$$
+= 5 (\frac{|G1|}{2} - \frac{C}{10}) > 5 \frac{|G1| - 1}{2}
+$$
+
+
+$$
+= \frac{C}{10} > \frac{1}{2}
+$$
+
+Which is true for any C lower than 5
+
+---
 
 TODO: pozriet tych 8 co nie su overful
 
