@@ -31,7 +31,7 @@ $$
 = \frac{C}{10} > \frac{1}{2}
 $$
 
-Which is true for any C lower than 5
+This holds for any C<5. From the properties of overfull graphs, we know that such a graph is uncolorable; therefore, G is also uncolorable.
 
 ---
 
