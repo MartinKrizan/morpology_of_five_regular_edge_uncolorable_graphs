@@ -23,7 +23,7 @@ def main():
                 # Assuming k=5 based on the project context
                 colorable, _ = is_edge_k_colorable(G, 5)
                 if colorable:
-                    print(nx.to_graph6_bytes(G).decode().strip().lstrip(">>graph6<<"))
+                    print("colorable:",nx.to_graph6_bytes(G).decode().strip().lstrip(">>graph6<<"))
             except Exception as e:
                 print(f"Error processing graph: {e}", file=sys.stderr)
     except Exception as e:
