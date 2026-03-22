@@ -19,6 +19,10 @@ def add_edge(G,u,v):
                 H.add_edge(f"b_{u}_{i}", f"n_{u}_{c}")
             c+=1
         
+    for i in range(4):
+        H.add_edge(f"b_{u}_{i}", f"n_{u}_4")
+        
+    H.add_edge(v, f"n_{u}_4")
 
     return H
 
@@ -41,6 +45,7 @@ def add_two_edges(G, u, v):
     for i in range(4):
         H.add_edge(f"b_{u}_{i}", f"n_{u}_3")
         H.add_edge(f"b_{u}_{i}", f"n_{u}_4")
+        
     H.add_edge(f"{v}", f"n_{u}_3")
     H.add_edge(f"{v}", f"n_{u}_4")
         

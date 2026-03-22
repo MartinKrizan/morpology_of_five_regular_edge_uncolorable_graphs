@@ -15,6 +15,7 @@ def main():
     G.add_edge(7,5)
     
     H = add_edge(G, 6, 7)
+    print(nx.degree_histogram(H))
     plt.figure(figsize=(10,10))
     nx.draw(H, with_labels=True, node_color='lightblue', edge_color='gray', node_size=800, font_size=14)
     plt.savefig("2ca.png")
