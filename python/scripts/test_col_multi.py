@@ -6,6 +6,19 @@ from functions_d.is_colorable import is_multigraph_edge_k_colorable
 from functions_d.draw_multigraph import draw_multigraph
 from functions_d.double_cycle import has_double_cycle
 
+def multigraph_edge_connectivity(G):
+    H = nx.Graph()
+
+    for u, v in G.edges():
+        if H.has_edge(u, v):
+            H[u][v]['capacity'] += 1
+        else:
+            H.add_edge(u, v, capacity=1)
+
+    # global min cut (edge connectivity)
+    cut_value, _ = nx.stoer_wagner(H, weight='capacity')
+    return cut_value
+
 def add_nodes_and_edges(G, num_nodes, num_edges, max_degree=5):
     """
     Adds a given number of nodes and edges to the multigraph G,
@@ -29,9 +42,19 @@ def add_nodes_and_edges(G, num_nodes, num_edges, max_degree=5):
             print(f"Warning: Cannot add more edges without exceeding max degree {max_degree}.")
             break
             
-        u, v = random.sample(valid_nodes, 2)
-        if G.number_of_edges(u,v) == 2:
+        u = random.choice(valid_nodes)
+        v_candidates = [n for n in valid_nodes if n != u and G.number_of_edges(u, n) < 2]
+        
+        if not v_candidates:
+            print("Warning: Cannot add more edges without exceeding max degree {max_degree}.")
             continue
+            
+        # To improve overall connectivity and degree distribution, preferentially
+        # connect to candidates that currently have the minimum degree.
+        v_min_deg = min(G.degree(n) for n in v_candidates)
+        v_min_deg_nodes = [n for n in v_candidates if G.degree(n) == v_min_deg]
+        v = random.choice(v_min_deg_nodes)
+        
         G.add_edge(u, v)
         edges_added += 1
 
@@ -47,13 +70,14 @@ def main():
     G.add_edge(0,2)
     G.add_edge(1,3)
     
-    n = 9
+    n = 12
     # Example: generating a random multigraph on 6 vertices with 14 edges, max degree 5
-    add_nodes_and_edges(G, num_nodes=n, num_edges=n*5/2+1, max_degree=5)
+    add_nodes_and_edges(G, num_nodes=n, num_edges=n*5/2+2, max_degree=5)
     
-    if nx.degree_histogram(G)[1]!=0:
+    deg=nx.degree_histogram(G)
+    if deg[1]!=0:
         return
-        
+
     if has_double_cycle(G):
         return
         
@@ -61,8 +85,8 @@ def main():
     H.remove_node(0)
     H.remove_node(1)
     H.remove_node(4)
-    con = nx.edge_connectivity(H)
-    if con < 3:
+    con = multigraph_edge_connectivity(H)
+    if con < 4:
         return
     
 
@@ -72,7 +96,7 @@ def main():
         print(nx.degree_histogram(G), con)
         print(G.edges())
         print("Is 5-edge-colorable:", is_col)        
-        draw_multigraph(G, f"out/_uncolorable_multigraph_no_double_cycle_{time.time()}.png")
+        draw_multigraph(G, f"out/_uncolorable_{n}_multigraph_no_double_cycle_{time.time()}.png")
 
 
 
