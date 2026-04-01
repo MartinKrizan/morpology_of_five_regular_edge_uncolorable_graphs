@@ -10,7 +10,7 @@ def draw_multigraph(G, filename="multigraph.png"):
     plt.figure(figsize=(10, 8))
     
     # Color nodes with degree < 5 differently (e.g., orange)
-    node_colors = ['orange' if G.degree(n) < 5 else 'lightblue' for n in G.nodes()]
+    node_colors = ['orange' if G.degree(n) != 5 else 'lightblue' for n in G.nodes()]
     nx.draw_networkx_nodes(G, pos, node_color=node_colors, node_size=500, edgecolors='black')
     nx.draw_networkx_labels(G, pos)
     
