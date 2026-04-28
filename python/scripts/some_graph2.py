@@ -28,8 +28,8 @@ def all_pairings(arr):
 
     for i in range(1, len(arr)):
         pair = (first, arr[i])
-        if first[:1] == arr[i][:1]:
-            continue
+        if first == arr[i] or arr[i-1] == arr[i]:
+           continue
         
         remaining = arr[1:i] + arr[i+1:]
 
@@ -56,58 +56,56 @@ def main():
     
     free_nodes = []
     
-    for i in range(0,5):
-        G.add_edge(f"{i}_0",f"{i}_1")
-        G.add_edge(f"{i}_0",f"{i}_1")
-        
-        G.add_edge(f"{i}_2",f"{i}_1")
-        G.add_edge(f"{i}_2",f"{i}_1")
-        
-        G.add_edge(f"{i}_2",f"{i}_3")
-        G.add_edge(f"{i}_2",f"{i}_3")
-        
-        G.add_edge(f"{i}_0",f"{i}_3")
-        free_nodes.append(f"{i}_0")
-        free_nodes.append(f"{i}_0")
-        free_nodes.append(f"{i}_1")
-        free_nodes.append(f"{i}_2")
-        free_nodes.append(f"{i}_3")
-        free_nodes.append(f"{i}_3")
+    n=11
     
-    free_nodes.remove("0_0")
-    free_nodes.remove("1_3")
-    G.add_edge("0_0","1_3")
-    free_nodes.remove("0_3")
-    free_nodes.remove("2_0")
-    G.add_edge("0_3","2_0")
-    free_nodes.remove("0_1")
-    free_nodes.remove("3_0")
-    G.add_edge("0_1","3_0")
+    for i in range(0,n):
+        G.add_edge(f"_{i}",f"_{(i+1)%n}")
+        G.add_edge(f"_{i}",f"_{(i+1)%n}")
+        free_nodes.append(f"_{i}")
+    free_nodes.append(f"_{n+1}")
+    free_nodes.append(f"_{n+1}")
+    free_nodes.append(f"_{n+1}")
+    free_nodes.append(f"_{n+2}")
+    free_nodes.append(f"_{n+2}")
+    free_nodes.append(f"_{n+2}")
+    free_nodes.append(f"_{n+3}")
+    free_nodes.append(f"_{n+3}")
+    free_nodes.append(f"_{n+3}")
+    G.add_edge(f"_{n+1}",f"_{n+2}")
+    G.add_edge(f"_{n+1}",f"_{n+3}")
+    G.add_edge(f"_{n+2}",f"_{n+3}")
     
-    
+    G.add_edge("_0", f"_{n+1}")
+    free_nodes.remove("_0")
+    free_nodes.remove(f"_{n+1}")
     
     cnt = 0
     for pairing in all_pairings(free_nodes):
         cnt+=1
         if cnt < 0: #5M
             continue
-        if cnt % 100000 == 0:
+        if cnt % 1000 == 0:
             print (cnt, pairing)
         
        
         H = G.copy()
         for pair in pairing:
             H.add_edge(pair[0], pair[1])
-        if cnt % 10000 == 0:
+        if cnt % 1000 == 0:
             draw_multigraph(H)
         
-        if multigraph_edge_connectivity(H) >4:
-            print(multigraph_edge_connectivity(H))
-            draw_multigraph(H)
-            print(cnt, pairing)
-            return
+        if multigraph_edge_connectivity(H) >3:
+            if not is_multigraph_edge_k_colorable(H,5)[0]:
+                print("wiiii", pairing)
+                nx.degree_histogram(H)
+                print(nx.minimum_edge_cut(H),multigraph_edge_connectivity(H))
+                draw_multigraph(H)
+                return
+            #print(multigraph_edge_connectivity(H))
+            #draw_multigraph(H)
+            #print(cnt, pairing)
         
-    print(is_multigraph_edge_k_colorable(G, 5))
+    #print(is_multigraph_edge_k_colorable(G, 5))
     
     
     

@@ -2,56 +2,53 @@ import networkx as nx
 from functions_d.add_edge import add_edge, add_two_edges
 from functions_d.is_colorable import is_edge_k_colorable
 import matplotlib.pyplot as plt
+from functions_d.draw_multigraph import draw_multigraph
+
 
 def main():
-    G =nx.Graph()
+    G =nx.MultiGraph()
     
-    G.add_node("g1")
-    G.add_node("g2")
-    G.add_node("g3")
+    for i in range(0,9):
+        G.add_edge(f"{i}_1", f"{i}_2")
+        G.add_edge(f"{i}_1", f"{i}_2")
     
-    G.add_node("b1")
-    G.add_node("b2")
     
-    G.add_node("r1")
-    G.add_node("r2")
+    G.add_edge(f"0_1", f"3_1")
+    G.add_edge(f"0_1", f"4_1")
+    G.add_edge(f"0_1", f"5_1")
+    G.add_edge(f"1_1", f"3_1")
+    G.add_edge(f"1_1", f"4_1")
+    G.add_edge(f"1_1", f"5_1")
+    G.add_edge(f"2_1", f"3_1")
+    G.add_edge(f"2_1", f"4_1")
+    G.add_edge(f"2_1", f"5_1")
+
+    G.add_edge(f"6_1", f"3_2")
+    G.add_edge(f"6_1", f"4_2")
+    G.add_edge(f"6_1", f"5_2")
+    G.add_edge(f"7_1", f"3_2")
+    G.add_edge(f"7_1", f"4_2")
+    G.add_edge(f"7_1", f"5_2")
+    G.add_edge(f"8_1", f"3_2")
+    G.add_edge(f"8_1", f"4_2")
+    G.add_edge(f"8_1", f"5_2")
+
     
-    G.add_node("ble")
+    G.add_edge(f"6_2", f"0_2")
+    G.add_edge(f"6_2", f"1_2")
+    G.add_edge(f"6_2", f"2_2")
+    G.add_edge(f"7_2", f"0_2")
+    G.add_edge(f"7_2", f"1_2")
+    G.add_edge(f"7_2", f"2_2")
+    G.add_edge(f"8_2", f"0_2")
+    G.add_edge(f"8_2", f"1_2")
+    G.add_edge(f"8_2", f"2_2")
     
-    G.add_edge("g1","g2")
-    G.add_edge("g1","g3")
-    G.add_edge("g2","g3")
-    
-    G.add_edge("g1","ble")
-    G.add_edge("g1","b1")
-    G.add_edge("g1","b2")
-    G.add_edge("g2","ble")
-    G.add_edge("g2","b1")
-    G.add_edge("g2","b2")
-    G.add_edge("g3","ble")
-    G.add_edge("g3","b1")
-    G.add_edge("g3","b2")
-    
-    G.add_edge("b1","b2")
-    G.add_edge("b1","r2")
-    G.add_edge("b2","r1")
-    
-    G.add_edge("r1","ble")
-    G.add_edge("r2","ble")
-    
-    G.add_edge("r1","r2")
-    G.add_edge("r1","r2")
-    
-    G = add_two_edges(G,"r1","r2")
     
     print(nx.degree_histogram(G))
     print(nx.edge_connectivity(G))
     print(is_edge_k_colorable(G,5))
-    
-    plt.figure(figsize=(10,10))
-    nx.draw(G, with_labels=True, node_color='lightblue', edge_color='gray', node_size=800, font_size=14)
-    plt.savefig("2ca.png")
-    plt.close()
+    draw_multigraph(G)
     
     
 if __name__ == "__main__":
