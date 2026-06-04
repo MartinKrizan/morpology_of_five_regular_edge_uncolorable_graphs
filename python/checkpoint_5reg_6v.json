@@ -1,0 +1,24 @@
+{
+  "n_vertices": 6,
+  "last_multiplicities": [
+    3,
+    2,
+    0,
+    0,
+    0,
+    2,
+    0,
+    0,
+    0,
+    1,
+    0,
+    0,
+    2,
+    2,
+    3
+  ],
+  "colorable_count": 7918,
+  "uncolorable_count": 1230,
+  "completed": true,
+  "timestamp": "2026-06-04 15:11:38"
+}

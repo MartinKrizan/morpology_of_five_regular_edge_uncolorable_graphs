@@ -1,0 +1,4 @@
+# 5-regular loopless multigraphs on 4 vertices (max multiplicity 3)
+# Only UNCOLORABLE graphs listed below
+# Format: <index> | <edge_list>
+#
