@@ -23,14 +23,20 @@ import time
 import argparse
 import json
 import networkx as nx
+from ortools.sat.python import cp_model
 
 # Add parent directory to path so we can import functions_d
 sys.path.insert(0, os.path.join(os.path.dirname(__file__), ".."))
 from functions_d.is_colorable import is_multigraph_edge_k_colorable
 
-MAX_MULTIPLICITY = 2
+MAX_MULTIPLICITY = 3
 DEGREE = 5
 K = 5  # number of colors for edge coloring
+
+# List of fixed edges that MUST be present in all generated graphs.
+# This improves performance by reducing the search space.
+# Example: FIXED_EDGES = [(0, 1), (0, 1), (0, 2), (1, 2)]
+FIXED_EDGES = [(0,1),(0,1),(0,2),(0,3),(0,4),(5,6),(5,6)]
 
 
 def build_pairs(n):
@@ -85,6 +91,18 @@ def generate_all_5regular(n, resume_after=None):
     multiplicities = [0] * num_pairs
     remaining_deg = [DEGREE] * n
 
+    # Precalculate minimum multiplicities from FIXED_EDGES
+    fixed_multiplicities = [0] * num_pairs
+    for u, v in FIXED_EDGES:
+        if u > v:
+            u, v = v, u
+        if 0 <= u < n and 0 <= v < n and u != v:
+            try:
+                p_idx = pairs.index((u, v))
+                fixed_multiplicities[p_idx] += 1
+            except ValueError:
+                pass
+
     # skip_mode[0] is True while we haven't yet passed the resume point
     skip_mode = [resume_after is not None]
 
@@ -109,7 +127,9 @@ def generate_all_5regular(n, resume_after=None):
         rj_after = remaining_after[j][pair_idx]
         lb_i = remaining_deg[i] - MAX_MULTIPLICITY * ri_after
         lb_j = remaining_deg[j] - MAX_MULTIPLICITY * rj_after
-        min_m = max(lb_i, lb_j, 0)
+        
+        fixed_m = fixed_multiplicities[pair_idx]
+        min_m = max(lb_i, lb_j, fixed_m, 0)
 
         if min_m > max_m:
             return
@@ -207,8 +227,9 @@ def main():
         return
 
     # ── Full generation mode ─────────────────────────────────────────────
-    output_file = args.output or f"results_5reg_{n}v.txt"
-    checkpoint_file = args.checkpoint or f"checkpoint_5reg_{n}v.json"
+    timestamp = time.strftime("%Y%m%d_%H%M%S")
+    output_file = args.output or f"results_5reg_{n}v_{timestamp}.txt"
+    checkpoint_file = args.checkpoint or f"checkpoint_5reg_{n}v_{timestamp}.json"
     pairs = build_pairs(n)
 
     # Load checkpoint if resuming
@@ -240,6 +261,7 @@ def main():
     if file_mode == "w":
         out_f.write(f"# 5-regular loopless multigraphs on {n} vertices "
                     f"(max multiplicity {MAX_MULTIPLICITY})\n")
+        out_f.write(f"# Fixed edges: {FIXED_EDGES}\n")
         out_f.write(f"# Only UNCOLORABLE graphs listed below\n")
         out_f.write(f"# Format: <index> | <edge_list>\n")
         out_f.write(f"#\n")
@@ -255,6 +277,13 @@ def main():
     print(f"{'='*65}")
     print()
 
+    # Create reusable solver for colorability checks
+    # Using 1 worker is dramatically faster when checking millions of tiny graphs 
+    # because it avoids thread synchronization overhead.
+    solver = cp_model.CpSolver()
+    solver.parameters.max_time_in_seconds = args.time_limit
+    solver.parameters.num_search_workers = 1
+
     last_mults = None  # track for checkpoint
 
     try:
@@ -264,7 +293,7 @@ def main():
             # Build multigraph and check colorability
             G = multiplicities_to_multigraph(n, pairs, mults)
             colorable, _ = is_multigraph_edge_k_colorable(
-                G, K, time_limit_s=args.time_limit
+                G, K, solver=solver
             )
 
             if colorable:
@@ -276,26 +305,22 @@ def main():
                 print(f"\n  *** UNCOLORABLE #{uncolorable_count}: "
                       f"index={graph_index}, edges={edge_list}")
                 out_f.write(line + "\n")
-                out_f.flush()
 
             graph_index += 1
 
-            # Progress update
-            elapsed = time.perf_counter() - t_start
-            rate = (graph_index - (colorable_count + uncolorable_count
-                    - colorable_count - uncolorable_count
-                    + (resume_after is not None) * (colorable_count + uncolorable_count - graph_index + graph_index - colorable_count - uncolorable_count + colorable_count + uncolorable_count))) / elapsed if elapsed > 0 else 0
-            print(
-                f"  [{graph_index}] "
-                f"col: {colorable_count}  uncol: {uncolorable_count}  "
-                f"elapsed: {elapsed:.1f}s  "
-                f"mults: {mults}",
-                end="\r"
-            )
-
-            # Save checkpoint periodically (every graph, since each is slow)
-            save_checkpoint(checkpoint_file, n, mults,
-                            colorable_count, uncolorable_count)
+            # Progress update and checkpointing every 1000 graphs
+            if graph_index % 10000 == 0:
+                out_f.flush()
+                elapsed = time.perf_counter() - t_start
+                print(
+                    f"  [{graph_index}] "
+                    f"col: {colorable_count}  uncol: {uncolorable_count}  "
+                    f"elapsed: {elapsed:.1f}s  "
+                    f"mults: {mults}",
+                    end="\r"
+                )
+                save_checkpoint(checkpoint_file, n, mults,
+                                colorable_count, uncolorable_count)
 
     except KeyboardInterrupt:
         print("\n\n  ⚠ Interrupted! Saving checkpoint...")

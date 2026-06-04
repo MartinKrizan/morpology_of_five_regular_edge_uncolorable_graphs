@@ -8,13 +8,8 @@ from functions_d.draw_multigraph import draw_multigraph
 def main():
     G =nx.MultiGraph()
     
-    for i in range(0,5):
-        G.add_edge(f"{i}_1", f"{i}_2")
-        G.add_edge(f"{i}_1", f"{(i+1)%5}_1")
-        G.add_edge(f"{i}_1", f"{(i+1)%5}_1")
-        
-        G.add_edge(f"{i}_2", f"{(i+2)%5}_2")
-        G.add_edge(f"{i}_2", f"{(i+2)%5}_2")
+    for i in [(0, 1), (0, 1), (0, 2), (0, 3), (0, 4), (1, 2), (1, 7), (1, 7), (2, 3), (2, 3), (2, 6), (3, 6), (3, 6), (4, 5), (4, 5), (4, 7), (4, 7), (5, 6), (5, 6), (5, 7)]:
+        G.add_edge(i[0],i[1])
    
     
     print(nx.degree_histogram(G))

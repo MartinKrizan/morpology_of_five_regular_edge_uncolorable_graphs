@@ -5,7 +5,7 @@ def normalize_edge(u, v):
     """Ensure consistent undirected edge key."""
     return (u, v) if u < v else (v, u)
 
-def is_edge_k_colorable(G, k, time_limit_s=10):
+def is_edge_k_colorable(G, k, time_limit_s=10, solver=None):
     """Check if undirected graph G is edge k-colorable using CP-SAT."""
     if not G.edges():
         return True, {}
@@ -49,9 +49,10 @@ def is_edge_k_colorable(G, k, time_limit_s=10):
         if len(incident) > 1:
             model.AddAllDifferent(incident)
 
-    solver = cp_model.CpSolver()
-    solver.parameters.max_time_in_seconds = time_limit_s
-    solver.parameters.num_search_workers = 8
+    if solver is None:
+        solver = cp_model.CpSolver()
+        solver.parameters.max_time_in_seconds = time_limit_s
+        solver.parameters.num_search_workers = 8
 
     status = solver.Solve(model)
 
@@ -77,7 +78,7 @@ def normalize_multiedge(u, v, key):
     return (u, v, key) if u < v else (v, u, key)
 
 
-def is_multigraph_edge_k_colorable(G, k, time_limit_s=10):
+def is_multigraph_edge_k_colorable(G, k, time_limit_s=10, solver=None):
     """Check if undirected multigraph G is edge k-colorable using CP-SAT."""
     if not G.edges():
         return True, {}
@@ -116,9 +117,10 @@ def is_multigraph_edge_k_colorable(G, k, time_limit_s=10):
         if len(incident_vars) > 1:
             model.AddAllDifferent(incident_vars)
 
-    solver = cp_model.CpSolver()
-    solver.parameters.max_time_in_seconds = time_limit_s
-    solver.parameters.num_search_workers = 8
+    if solver is None:
+        solver = cp_model.CpSolver()
+        solver.parameters.max_time_in_seconds = time_limit_s
+        solver.parameters.num_search_workers = 8
 
     status = solver.Solve(model)
 
