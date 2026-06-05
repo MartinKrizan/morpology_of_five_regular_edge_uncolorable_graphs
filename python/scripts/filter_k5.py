@@ -7,6 +7,7 @@ import networkx as nx
 # Add parent to path so we can import functions_d
 sys.path.insert(0, os.path.join(os.path.dirname(__file__), ".."))
 from functions_d.k5_substitution import replace_multiedge_vertices_with_k5
+from functions_d.is_colorable import is_edge_k_colorable, is_multigraph_edge_k_colorable
 
 def main():
     if len(sys.argv) < 2:
@@ -27,7 +28,10 @@ def main():
             line = line.strip()
             if not line or line.startswith("#"):
                 continue
-                
+            
+            if line_num%1000==0:
+                print (line_num,"-----")
+            
             parts = line.split(" | ", 1)
             if len(parts) != 2:
                 continue
@@ -52,12 +56,14 @@ def main():
                 
             # Check edge connectivity
             conn = nx.edge_connectivity(simple_G)
+            col = is_multigraph_edge_k_colorable(G, 5)
             
-            if conn > 3:
+            if conn > 3 or col[0]:
                 print(f"Graph Index: {index_str}")
                 print(f"  Transformed Nodes: {simple_G.number_of_nodes()}")
                 print(f"  Transformed Edges: {simple_G.number_of_edges()}")
                 print(f"  Edge Connectivity: {conn}")
+                print(f"  Col: {col}")
                 print(f"  Original Edges: {edges_str}")
                 print("-" * 60)
 

@@ -77,9 +77,7 @@ def generate_all_5regular(n, resume_after=None):
     Yields tuples of multiplicities in the order of pairs:
     (0,1), (0,2), ..., (0,n-1), (1,2), ..., (n-2,n-1).
 
-    If resume_after is provided (a multiplicity tuple from a previous run),
-    all graphs up to and including that tuple are skipped via fast-forward
-    (entire subtrees are pruned without recursion).
+    Uses an optimized iterative state machine for maximum speed.
     """
     if n < 2 or n % 2 != 0:
         return
@@ -103,57 +101,80 @@ def generate_all_5regular(n, resume_after=None):
             except ValueError:
                 pass
 
-    # skip_mode[0] is True while we haven't yet passed the resume point
-    skip_mode = [resume_after is not None]
+    # Precalculate 1D arrays for bounds to avoid inner loop overhead
+    max_mult_ri_after = [0] * num_pairs
+    max_mult_rj_after = [0] * num_pairs
+    for idx, (i, j) in enumerate(pairs):
+        max_mult_ri_after[idx] = remaining_after[i][idx] * MAX_MULTIPLICITY
+        max_mult_rj_after[idx] = remaining_after[j][idx] * MAX_MULTIPLICITY
 
-    def backtrack(pair_idx):
+    # State machine arrays
+    state_m = [-1] * num_pairs
+    max_m_stack = [0] * num_pairs
+    
+    pair_idx = 0
+    skip_mode = resume_after is not None
+
+    while pair_idx >= 0:
         if pair_idx == num_pairs:
+            # Reached a valid leaf
             if all(r == 0 for r in remaining_deg):
-                if skip_mode[0]:
-                    # This is the resume point itself — skip it, stop skipping
-                    skip_mode[0] = False
+                if skip_mode:
+                    skip_mode = False
                 else:
                     yield tuple(multiplicities)
-            return
+            pair_idx -= 1
+            continue
 
-        i, j = pairs[pair_idx]
-        max_m = min(MAX_MULTIPLICITY, remaining_deg[i], remaining_deg[j])
+        if state_m[pair_idx] == -1:
+            # First time visiting this level
+            i, j = pairs[pair_idx]
+            
+            # Calculate bounds
+            max_m = min(MAX_MULTIPLICITY, remaining_deg[i], remaining_deg[j])
+            
+            lb_i = remaining_deg[i] - max_mult_ri_after[pair_idx]
+            lb_j = remaining_deg[j] - max_mult_rj_after[pair_idx]
+            
+            fixed_m = fixed_multiplicities[pair_idx]
+            min_m = max(lb_i, lb_j, fixed_m, 0)
 
-        # Lower bounds from feasibility: after this pair, each vertex must
-        # still be able to fill its remaining degree with the remaining pairs.
-        # remaining_deg[v] - m <= MAX_MULTIPLICITY * remaining_after[v][pair_idx]
-        #   =>  m >= remaining_deg[v] - MAX_MULTIPLICITY * remaining_after[v][pair_idx]
-        ri_after = remaining_after[i][pair_idx]
-        rj_after = remaining_after[j][pair_idx]
-        lb_i = remaining_deg[i] - MAX_MULTIPLICITY * ri_after
-        lb_j = remaining_deg[j] - MAX_MULTIPLICITY * rj_after
-        
-        fixed_m = fixed_multiplicities[pair_idx]
-        min_m = max(lb_i, lb_j, fixed_m, 0)
+            if min_m > max_m:
+                # Dead end, backtrack
+                state_m[pair_idx] = -1
+                pair_idx -= 1
+                continue
+                
+            max_m_stack[pair_idx] = max_m
+            m = min_m
+            
+        else:
+            # Returning from a deeper level, undo previous state and increment m
+            i, j = pairs[pair_idx]
+            prev_m = state_m[pair_idx]
+            remaining_deg[i] += prev_m
+            remaining_deg[j] += prev_m
+            m = prev_m + 1
 
-        if min_m > max_m:
-            return
+        # Fast-forward for resume logic
+        if skip_mode and resume_after is not None:
+            if m < resume_after[pair_idx]:
+                m = resume_after[pair_idx]
+            elif m > resume_after[pair_idx]:
+                skip_mode = False
 
-        for m in range(min_m, max_m + 1):
-            # Fast-forward for resume: skip entire subtrees before resume point
-            if skip_mode[0] and resume_after is not None:
-                if m < resume_after[pair_idx]:
-                    continue  # entire subtree is lexicographically before resume
-                elif m > resume_after[pair_idx]:
-                    skip_mode[0] = False  # past resume point, generate normally
+        if m > max_m_stack[pair_idx]:
+            # Exhausted all valid multiplicities for this level, backtrack
+            state_m[pair_idx] = -1
+            pair_idx -= 1
+            continue
 
-            multiplicities[pair_idx] = m
-            remaining_deg[i] -= m
-            remaining_deg[j] -= m
-
-            yield from backtrack(pair_idx + 1)
-
-            remaining_deg[i] += m
-            remaining_deg[j] += m
-
-        multiplicities[pair_idx] = 0
-
-    yield from backtrack(0)
+        # Apply state and go deeper
+        state_m[pair_idx] = m
+        multiplicities[pair_idx] = m
+        remaining_deg[i] -= m
+        remaining_deg[j] -= m
+        pair_idx += 1
 
 
 def multiplicities_to_multigraph(n, pairs, mults):
