@@ -187,11 +187,12 @@ def multiplicities_to_multigraph(n, pairs, mults):
     return G
 
 
-def save_checkpoint(filepath, n, mults, colorable_count, uncolorable_count):
+def save_checkpoint(filepath, n, mults, graph_index, colorable_count, uncolorable_count):
     """Save checkpoint to file."""
     ckpt = {
         "n_vertices": n,
         "last_multiplicities": list(mults),
+        "graph_index": graph_index,
         "colorable_count": colorable_count,
         "uncolorable_count": uncolorable_count,
         "timestamp": time.strftime("%Y-%m-%d %H:%M:%S"),
@@ -215,6 +216,10 @@ def main():
     parser.add_argument("--checkpoint", type=str, default=None,
                         help="Checkpoint file path "
                              "(default: checkpoint_5reg_<N>v.json)")
+    parser.add_argument("--start", type=int, default=0,
+                        help="Start processing at this global graph index (skips earlier graphs)")
+    parser.add_argument("--finish", type=int, default=None,
+                        help="Stop processing at this global graph index")
     parser.add_argument("--time-limit", type=float, default=30.0,
                         help="Time limit per colorability check in seconds "
                              "(default: 30)")
@@ -257,6 +262,7 @@ def main():
     resume_after = None
     colorable_count = 0
     uncolorable_count = 0
+    graph_index = 0
 
     if args.resume and os.path.exists(checkpoint_file):
         with open(checkpoint_file, "r") as f:
@@ -268,6 +274,7 @@ def main():
         resume_after = tuple(ckpt["last_multiplicities"])
         colorable_count = ckpt.get("colorable_count", 0)
         uncolorable_count = ckpt.get("uncolorable_count", 0)
+        graph_index = ckpt.get("graph_index", 0)
         total_done = colorable_count + uncolorable_count
         print(f"Resuming from checkpoint:")
         print(f"  Last multiplicities: {resume_after}")
@@ -283,16 +290,17 @@ def main():
         out_f.write(f"# 5-regular loopless multigraphs on {n} vertices "
                     f"(max multiplicity {MAX_MULTIPLICITY})\n")
         out_f.write(f"# Fixed edges: {FIXED_EDGES}\n")
+        out_f.write(f"# Range: start={args.start}, finish={args.finish}\n")
         out_f.write(f"# Only UNCOLORABLE graphs listed below\n")
         out_f.write(f"# Format: <index> | <edge_list>\n")
         out_f.write(f"#\n")
 
     t_start = time.perf_counter()
-    graph_index = colorable_count + uncolorable_count  # sequential index
 
     print(f"{'='*65}")
     print(f"  5-regular loopless multigraphs on {n} vertices")
     print(f"  Max edge multiplicity: {MAX_MULTIPLICITY}")
+    print(f"  Range: {args.start} to {args.finish if args.finish else 'end'}")
     print(f"  Output: {output_file}")
     print(f"  Checkpoint: {checkpoint_file}")
     print(f"{'='*65}")
@@ -309,6 +317,14 @@ def main():
 
     try:
         for mults in generate_all_5regular(n, resume_after=resume_after):
+            if graph_index < args.start:
+                graph_index += 1
+                continue
+                
+            if args.finish is not None and graph_index >= args.finish:
+                print(f"\n\n  Reached finish index {args.finish}. Stopping.")
+                break
+                
             last_mults = mults
 
             # Build multigraph and check colorability
@@ -330,7 +346,7 @@ def main():
             graph_index += 1
 
             # Progress update and checkpointing every 1000 graphs
-            if graph_index % 10000 == 0:
+            if graph_index % 1000 == 0:
                 out_f.flush()
                 elapsed = time.perf_counter() - t_start
                 print(
@@ -340,13 +356,13 @@ def main():
                     f"mults: {mults}",
                     end="\r"
                 )
-                save_checkpoint(checkpoint_file, n, mults,
+                save_checkpoint(checkpoint_file, n, mults, graph_index,
                                 colorable_count, uncolorable_count)
 
     except KeyboardInterrupt:
         print("\n\n  ⚠ Interrupted! Saving checkpoint...")
         if last_mults is not None:
-            save_checkpoint(checkpoint_file, n, last_mults,
+            save_checkpoint(checkpoint_file, n, last_mults, graph_index,
                             colorable_count, uncolorable_count)
             print(f"  Checkpoint saved to {checkpoint_file}")
             print(f"  Resume with: python {sys.argv[0]} {n} --resume")
@@ -362,6 +378,7 @@ def main():
         ckpt = {
             "n_vertices": n,
             "last_multiplicities": list(last_mults),
+            "graph_index": graph_index,
             "colorable_count": colorable_count,
             "uncolorable_count": uncolorable_count,
             "completed": True,
