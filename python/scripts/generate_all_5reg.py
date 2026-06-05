@@ -23,20 +23,21 @@ import time
 import argparse
 import json
 import networkx as nx
+from itertools import combinations
 from ortools.sat.python import cp_model
 
 # Add parent directory to path so we can import functions_d
 sys.path.insert(0, os.path.join(os.path.dirname(__file__), ".."))
 from functions_d.is_colorable import is_multigraph_edge_k_colorable
 
-MAX_MULTIPLICITY = 3
+MAX_MULTIPLICITY = 2
 DEGREE = 5
 K = 5  # number of colors for edge coloring
 
 # List of fixed edges that MUST be present in all generated graphs.
 # This improves performance by reducing the search space.
 # Example: FIXED_EDGES = [(0, 1), (0, 1), (0, 2), (1, 2)]
-FIXED_EDGES = [(0,1),(0,1),(0,2),(0,3),(0,4),(5,6),(5,6)]
+FIXED_EDGES = [(0,1),(0,1),(0,2),(0,3),(0,4),(3,5),(4,6)]
 
 
 def build_pairs(n):
@@ -108,6 +109,26 @@ def generate_all_5regular(n, resume_after=None):
         max_mult_ri_after[idx] = remaining_after[i][idx] * MAX_MULTIPLICITY
         max_mult_rj_after[idx] = remaining_after[j][idx] * MAX_MULTIPLICITY
 
+    # Precompute edge connectivity constraints (for edge connectivity >= 4)
+    # To keep generation extremely fast, we only precompute for k=3 and k=4.
+    # k=3 prevents the double-edge cycle (max 5 internal edges).
+    # k=4 prevents weak 4-vertex subsets (max 8 internal edges).
+    cut_constraints_k3 = [[] for _ in range(num_pairs)]
+    cut_constraints_k4 = [[] for _ in range(num_pairs)]
+    
+    for pair_idx in range(num_pairs):
+        i, j = pairs[pair_idx]
+        
+        # k=3
+        for k1 in range(i):
+            idx = (pairs.index((k1, i)), pairs.index((k1, j)))
+            cut_constraints_k3[pair_idx].append(idx)
+            
+        # k=4
+        for k1, k2 in combinations(range(i), 2):
+            idx = tuple(pairs.index((u, v)) for u, v in combinations([k1, k2, i, j], 2) if (u, v) != (i, j))
+            cut_constraints_k4[pair_idx].append(idx)
+
     # State machine arrays
     state_m = [-1] * num_pairs
     max_m_stack = [0] * num_pairs
@@ -132,6 +153,19 @@ def generate_all_5regular(n, resume_after=None):
             
             # Calculate bounds
             max_m = min(MAX_MULTIPLICITY, remaining_deg[i], remaining_deg[j])
+            
+            # Apply cut constraints instantly to prevent weak subsets (fast-path optimized)
+            if max_m > 0:
+                for idx1, idx2 in cut_constraints_k3[pair_idx]:
+                    allowed = 5 - multiplicities[idx1] - multiplicities[idx2]
+                    if allowed < max_m:
+                        max_m = allowed
+                        
+                if max_m > 0:
+                    for idx1, idx2, idx3, idx4, idx5 in cut_constraints_k4[pair_idx]:
+                        allowed = 8 - multiplicities[idx1] - multiplicities[idx2] - multiplicities[idx3] - multiplicities[idx4] - multiplicities[idx5]
+                        if allowed < max_m:
+                            max_m = allowed
             
             lb_i = remaining_deg[i] - max_mult_ri_after[pair_idx]
             lb_j = remaining_deg[j] - max_mult_rj_after[pair_idx]
