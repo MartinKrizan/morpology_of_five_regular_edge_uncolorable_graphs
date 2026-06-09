@@ -1,0 +1,9 @@
+[tool.setuptools.packages.find]
+include = ["functions*, scripts*"]
+
+[project]
+name = "myproject"
+version = "0.1.0"
+
+[project.scripts]
+filter_uncol = "filter_uncol:main"

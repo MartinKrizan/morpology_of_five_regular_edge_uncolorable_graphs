@@ -1,8 +1,8 @@
 import sys
 import networkx as nx
 
-from functions_d.k5_substitution import replace_multiedge_vertices_with_k5
-from functions_d.is_colorable import is_edge_k_colorable
+from functions.k5_substitution import replace_multiedge_vertices_with_k5
+from functions.is_colorable import is_edge_k_colorable
 
 def parse_multicode(line):
     data = list(map(int, line.split()))

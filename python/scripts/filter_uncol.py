@@ -3,9 +3,9 @@ import os
 import ast
 import networkx as nx
 
-# Add parent to path so we can import functions_d
+# Add parent to path so we can import functions
 sys.path.insert(0, os.path.join(os.path.dirname(__file__), ".."))
-from functions_d.is_colorable import is_edge_k_colorable, is_multigraph_edge_k_colorable
+from functions.is_colorable import is_edge_k_colorable, is_multigraph_edge_k_colorable
 
 
 def parse_multicode(line):

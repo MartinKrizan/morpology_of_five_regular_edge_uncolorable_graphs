@@ -2,8 +2,8 @@
 import sys
 import networkx as nx
 import os
-from functions_d.g_from_file import read_graphs_from_file
-from functions_d.is_colorable import is_edge_k_colorable
+from functions.g_from_file import read_graphs_from_file
+from functions.is_colorable import is_edge_k_colorable
 
 
 def main():

@@ -1,0 +1,8 @@
+services:
+  python:
+    build: .
+    volumes:
+      - .:/python
+    working_dir: /python
+
+  
