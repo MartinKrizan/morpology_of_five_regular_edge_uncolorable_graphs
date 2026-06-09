@@ -1,23 +1,7 @@
 import networkx as nx
-from functions.g_from_file import read_graphs_from_file
-from functions.is_colorable import is_edge_k_colorable
-
-def is_overfull(G):
-    """
-    Checks if a graph G is overfull.
-    A graph G is overfull if |E| > delta(G) * floor(|V|/2).
-    """
-    n = G.number_of_nodes()
-    m = G.number_of_edges()
-    
-    if n == 0:
-        return False
-        
-    degrees = [d for n, d in G.degree()]
-    delta = max(degrees) if degrees else 0
-    
-    # Condition: |E| > delta * floor(n/2)
-    return m > delta * (n // 2)
+from morphology_graphs.core.g_from_file import read_graphs_from_file
+from morphology_graphs.core.is_colorable import is_edge_k_colorable
+from morphology_graphs.core.overfull import is_overfull
 
 def process_graphs(filename):
     i=0

@@ -14,13 +14,18 @@ dependencies = [
     "ortools",
 ]
 
+[project.optional-dependencies]
+dev = [
+    "pytest",
+]
+
 [project.scripts]
-chcol = "scripts.chcol:main"
-check-overfull = "scripts.check_overfull:main"
-filter-by-colorable-cut = "scripts.filter_by_colorable_cut:main"
-filter-low-con = "scripts.filter_low_con:main"
-filter-uncol = "scripts.filter_uncol:main"
-generate-overful = "scripts.generate_overful:main"
+chcol = "morphology_graphs.cli.chcol:main"
+check-overfull = "morphology_graphs.cli.check_overfull:main"
+filter-by-colorable-cut = "morphology_graphs.cli.filter_by_colorable_cut:main"
+filter-low-con = "morphology_graphs.cli.filter_low_con:main"
+filter-uncol = "morphology_graphs.cli.filter_uncol:main"
+generate-overful = "morphology_graphs.cli.generate_overful:main"
 
 [tool.setuptools.packages.find]
-include = ["functions*", "scripts*"]
+include = ["morphology_graphs*"]

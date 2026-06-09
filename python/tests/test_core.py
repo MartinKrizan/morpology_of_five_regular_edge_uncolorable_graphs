@@ -1,0 +1,50 @@
+import networkx as nx
+
+from morphology_graphs.core.is_colorable import (
+    is_edge_k_colorable,
+    is_multigraph_edge_k_colorable,
+)
+from morphology_graphs.core.k5_substitution import replace_multiedge_vertices_with_k5
+from morphology_graphs.core.multicode import parse_multicode
+from morphology_graphs.core.overfull import is_overfull
+
+
+def test_parse_multicode_preserves_parallel_edges():
+    graph = parse_multicode("2 1 0 1 3")
+
+    assert graph.number_of_nodes() == 2
+    assert graph.number_of_edges() == 3
+    assert graph.number_of_edges(0, 1) == 3
+
+
+def test_overfull_detects_dense_odd_complete_graph():
+    assert is_overfull(nx.complete_graph(5))
+    assert not is_overfull(nx.path_graph(5))
+
+
+def test_edge_colorability_simple_cycle():
+    colorable, assignment = is_edge_k_colorable(nx.cycle_graph(4), 2)
+
+    assert colorable
+    assert len(assignment) == 4
+
+
+def test_multigraph_colorability_accounts_for_parallel_edges():
+    graph = nx.MultiGraph()
+    graph.add_nodes_from([0, 1])
+    graph.add_edges_from([(0, 1), (0, 1), (0, 1)])
+
+    assert is_multigraph_edge_k_colorable(graph, 2)[0] is False
+    assert is_multigraph_edge_k_colorable(graph, 3)[0] is True
+
+
+def test_k5_substitution_removes_multiedge_vertex():
+    graph = nx.MultiGraph()
+    graph.add_nodes_from(range(6))
+    graph.add_edges_from([(0, 1), (0, 1), (0, 2), (0, 3), (0, 4)])
+
+    simple = replace_multiedge_vertices_with_k5(graph)
+
+    assert isinstance(simple, nx.Graph)
+    assert simple.number_of_nodes() == 10
+    assert all(len(set(simple.neighbors(v))) == simple.degree(v) for v in simple.nodes())

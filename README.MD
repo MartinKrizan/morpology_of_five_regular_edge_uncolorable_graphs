@@ -28,6 +28,12 @@ docker compose build
 docker compose run --rm python generate-overful 9 --count 3
 ```
 
+Run the Python tests:
+
+```sh
+docker compose run --rm python python -m pytest python/tests
+```
+
 Most filter commands read graph data from stdin, for example:
 
 ```sh

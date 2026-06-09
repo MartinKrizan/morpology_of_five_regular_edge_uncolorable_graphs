@@ -1,22 +1,7 @@
 import sys
 import networkx as nx
 
-def is_overfull(G):
-    """
-    Checks if a graph G is overfull.
-    A graph G is overfull if |E| > delta(G) * floor(|V|/2).
-    """
-    n = G.number_of_nodes()
-    m = G.number_of_edges()
-    
-    if n == 0:
-        return False
-        
-    degrees = [d for n, d in G.degree()]
-    delta = max(degrees) if degrees else 0
-    
-    # Condition: |E| > delta * floor(n/2)
-    return m > delta * (n // 2)
+from morphology_graphs.core.overfull import is_overfull
 
 def main():
     if len(sys.argv) < 2:
@@ -38,14 +23,14 @@ def main():
     n = G.number_of_nodes()
     m = G.number_of_edges()
     degrees = [d for node, d in G.degree()]
-    delta = max(degrees) if degrees else 0
+    max_degree = max(degrees) if degrees else 0
     
     overfull = is_overfull(G)
     
     print(f"Nodes (n): {n}")
     print(f"Edges (m): {m}")
-    print(f"Max degree (delta): {delta}")
-    print(f"Threshold (delta * floor(n/2)): {delta * (n // 2)}")
+    print(f"Max degree (delta): {max_degree}")
+    print(f"Threshold (delta * floor(n/2)): {max_degree * (n // 2)}")
     print(f"Is overfull: {overfull}")
 
 if __name__ == "__main__":

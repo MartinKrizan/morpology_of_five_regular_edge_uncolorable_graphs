@@ -2,8 +2,8 @@
 import sys
 import networkx as nx
 import os
-from functions.g_from_file import read_graphs_from_file
-from functions.is_colorable import is_edge_k_colorable
+from morphology_graphs.core.g_from_file import read_graphs_from_file
+from morphology_graphs.core.is_colorable import is_edge_k_colorable
 
 
 def main():

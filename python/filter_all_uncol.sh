@@ -12,7 +12,7 @@ for start in $(seq 1 1000000 17000001); do
         echo "Processing lines ${start}-${end}..."
 
         sed -n "${start},${end}p;${end}q" "$INPUT" \
-            | python3 -m scripts.filter_uncol \
+            | filter-uncol \
             > "uncol_12_m2_${out_start}-${out_end}M.txt"
 
         echo "Finished ${start}-${end}"
