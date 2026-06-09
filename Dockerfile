@@ -6,11 +6,12 @@ RUN apt-get update && apt-get install -y \
     nauty \
     && rm -rf /var/lib/apt/lists/*
 
-WORKDIR /app
+WORKDIR /workspace
 
 COPY requirements.txt .
 RUN pip install --no-cache-dir -r ./requirements.txt
 
 COPY . .
+RUN pip install --no-cache-dir --editable ./python
 
 CMD ["tail", "-f", "/dev/null"]

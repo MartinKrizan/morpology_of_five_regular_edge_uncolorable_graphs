@@ -1,5 +1,39 @@
 # Morphology of 5-regular uncolorable graphs
 
+## Python tools
+
+The Python code lives in `python/` and is installable as an editable package.
+
+Local setup, when Python is available on PATH:
+
+```sh
+python -m pip install -e ./python
+```
+
+This installs these command-line tools:
+
+```sh
+chcol
+check-overfull
+filter-by-colorable-cut
+filter-low-con
+filter-uncol
+generate-overful
+```
+
+Docker setup:
+
+```sh
+docker compose build
+docker compose run --rm python generate-overful 9 --count 3
+```
+
+Most filter commands read graph data from stdin, for example:
+
+```sh
+docker compose run --rm python filter-uncol < data/multigraphs/uncol_8_m2_all_small.txt
+```
+
 ## Uncolorable graphs on 16 vertices
 
 All uncolorable 5-regular graphs on 16 vertices are listed in the file `results/uncol_16.g6`.

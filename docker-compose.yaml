@@ -2,7 +2,7 @@ services:
   python:
     build: .
     volumes:
-      - .:/python
-    working_dir: /python
+      - .:/workspace
+    working_dir: /workspace
 
   

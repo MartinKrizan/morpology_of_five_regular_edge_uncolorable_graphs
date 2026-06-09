@@ -1,9 +1,26 @@
-[tool.setuptools.packages.find]
-include = ["functions*, scripts*"]
+[build-system]
+requires = ["setuptools>=69", "wheel"]
+build-backend = "setuptools.build_meta"
 
 [project]
-name = "myproject"
+name = "morphology-five-regular-graphs"
 version = "0.1.0"
+description = "Tools for studying 5-regular edge-uncolorable graphs."
+requires-python = ">=3.10"
+dependencies = [
+    "matplotlib",
+    "networkx",
+    "numpy",
+    "ortools",
+]
 
 [project.scripts]
-filter_uncol = "filter_uncol:main"
+chcol = "scripts.chcol:main"
+check-overfull = "scripts.check_overfull:main"
+filter-by-colorable-cut = "scripts.filter_by_colorable_cut:main"
+filter-low-con = "scripts.filter_low_con:main"
+filter-uncol = "scripts.filter_uncol:main"
+generate-overful = "scripts.generate_overful:main"
+
+[tool.setuptools.packages.find]
+include = ["functions*", "scripts*"]
