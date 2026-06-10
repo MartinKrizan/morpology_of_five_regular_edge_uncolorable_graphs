@@ -1,11 +1,15 @@
 import json
 
+import networkx as nx
+
 from morphology_graphs.core.gadget import (
     CandidateResult,
     Gadget5Pole,
     analyze_three_state_encoding,
     canonical_signature_set_under_color_permutation,
+    categorize_port_pairs,
     enumerate_port_color_signatures,
+    graph_to_plain_graph6,
     is_5_edge_colorable,
     is_internally_5_edge_connected,
     load_gadget_json,
@@ -86,3 +90,22 @@ def test_serialization_outputs_machine_and_human_artifacts(tmp_path):
     assert json.loads(json_path.read_text())["num_signatures"] == 1
     assert "allowed signatures = 1" in text_path.read_text()
     assert "p0" in dot_path.read_text()
+
+
+def test_pair_categorization_detects_forced_different_ports_at_same_vertex():
+    graph = nx.Graph()
+    graph.add_node(0)
+
+    category = categorize_port_pairs(graph, [0, 0, 0, 0, 0])
+
+    assert category.forced_same == 0
+    assert category.forced_different == 10
+    assert category.flexible == 0
+    assert category.blocked == 0
+    assert category.file_stem() == "s0d10f0b0"
+
+
+def test_plain_graph6_has_no_header():
+    graph = nx.path_graph(3)
+
+    assert not graph_to_plain_graph6(graph).startswith(">>graph6<<")

@@ -6,10 +6,18 @@ This project now has an installed Python command:
 gadget-search --n-min 5 --n-max 9 --require-cut-5 --max-results 50
 ```
 
+There is also a weaker classification command for grouping generated poles by
+pairwise port-color constraints:
+
+```sh
+gadget-categorize --ports 5 --n-min 5 --n-max 13
+```
+
 In Docker, after rebuilding the image or reinstalling the editable package:
 
 ```sh
 docker compose run --rm python gadget-search --n-min 5 --n-max 9 --require-cut-5
+docker compose run --rm python gadget-categorize --ports 5 --n-min 5 --n-max 13
 ```
 
 ## Generator
@@ -38,6 +46,11 @@ part of the boundary signature.
 The generator rejects port placements that are equivalent by an internal
 automorphism while preserving the five port labels. Use `--all-port-placements`
 to disable that rejection.
+
+For `gadget-categorize`, ports are inferred from degree deficits in sorted
+vertex order. With the default `--geng-min-degree 4 --geng-max-degree 5`, this
+means each port is attached to one degree-4 vertex. The graph6 output alone is
+therefore enough to reconstruct the ports.
 
 ## Reused Components
 
@@ -124,3 +137,35 @@ text, and DOT files under `output/gadgets` by default.
 The JSON contains the raw gadget, signatures, canonical signature set, cut data,
 score, and basic three-state diagnostics such as divisibility by 3, parity
 counts, and color-position counts.
+
+## Category Output
+
+`gadget-categorize` writes one `.g6` file per category under
+`output/gadget_categories` by default. These files intentionally contain only
+plain graph6 lines and no comments or metadata.
+
+For every unordered port pair `(Pi, Pj)`, the command asks two CP-SAT decision
+questions:
+
+```text
+is there a coloring with Pi = Pj?
+is there a coloring with Pi != Pj?
+```
+
+The pair is counted as:
+
+```text
+forced_same       same possible, different impossible
+forced_different  same impossible, different possible
+flexible          both possible
+blocked           neither possible
+```
+
+The category filename records the four counts, for example:
+
+```text
+n9p5_s0d10f0b0.g6
+```
+
+If CP-SAT returns `UNKNOWN` for a pair constraint, the command raises an error
+instead of writing the graph into a possibly wrong category.

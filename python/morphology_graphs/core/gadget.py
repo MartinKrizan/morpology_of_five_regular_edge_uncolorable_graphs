@@ -109,6 +109,25 @@ class CandidateResult:
     three_state_diagnostics: dict
 
 
+@dataclass(frozen=True)
+class PortPairCategory:
+    forced_same: int
+    forced_different: int
+    flexible: int
+    blocked: int
+
+    def file_stem(self) -> str:
+        return f"s{self.forced_same}d{self.forced_different}f{self.flexible}b{self.blocked}"
+
+    def label(self) -> str:
+        return (
+            f"same={self.forced_same}, "
+            f"different={self.forced_different}, "
+            f"flexible={self.flexible}, "
+            f"blocked={self.blocked}"
+        )
+
+
 def validate_port_count_5(gadget: Gadget5Pole) -> bool:
     return len(gadget.port_vertices) == 5
 
@@ -157,21 +176,22 @@ def validate_gadget(gadget: Gadget5Pole, *, require_simple: bool = True) -> list
     return errors
 
 
-def expected_internal_edge_count(n: int) -> int:
-    if n % 2 == 0:
-        raise ValueError("5-pole internal order must be odd because 5n - 5 must be even")
-    return (5 * n - 5) // 2
+def expected_internal_edge_count(n: int, ports: int = 5) -> int:
+    if (5 * n - ports) % 2 != 0:
+        raise ValueError("5n - ports must be even")
+    return (5 * n - ports) // 2
 
 
 def iter_geng_graphs(
     n: int,
     *,
+    ports: int = 5,
     geng_path: str = "geng",
     require_connected: bool = True,
     min_degree: int = 4,
     max_degree: int = 5,
 ) -> Iterator[nx.Graph]:
-    edge_count = expected_internal_edge_count(n)
+    edge_count = expected_internal_edge_count(n, ports)
     resolved = shutil.which(geng_path)
     if resolved is None:
         raise RuntimeError(f"nauty geng executable not found: {geng_path!r}")
@@ -195,15 +215,15 @@ def iter_geng_graphs(
         raise RuntimeError(f"geng failed with exit code {return_code}: {stderr.strip()}")
 
 
-def deficits_from_graph(graph: nx.Graph) -> list[int]:
+def deficits_from_graph(graph: nx.Graph, ports: int = 5) -> list[int]:
     deficits: list[int] = []
     for vertex in sorted(graph.nodes()):
         degree = graph.degree(vertex)
         if degree > 5:
             raise ValueError(f"internal vertex {vertex} has degree {degree}, expected at most 5")
         deficits.extend([vertex] * (5 - degree))
-    if len(deficits) != 5:
-        raise ValueError(f"internal graph has total missing degree {len(deficits)}, expected 5")
+    if len(deficits) != ports:
+        raise ValueError(f"internal graph has total missing degree {len(deficits)}, expected {ports}")
     return deficits
 
 
@@ -249,6 +269,7 @@ def iter_candidate_gadgets(
 ) -> Iterator[Gadget5Pole]:
     for graph in iter_geng_graphs(
         n,
+        ports=5,
         geng_path=geng_path,
         require_connected=require_connected,
         min_degree=min_degree,
@@ -320,6 +341,112 @@ def _build_coloring_model(gadget: Gadget5Pole) -> tuple[cp_model.CpModel, list[c
         model.AddAllDifferent(incident[vertex])
 
     return model, port_vars
+
+
+def build_port_coloring_model(
+    graph: nx.Graph,
+    port_vertices: Iterable[int],
+) -> tuple[cp_model.CpModel, list[cp_model.IntVar]]:
+    port_tuple = tuple(port_vertices)
+    model = cp_model.CpModel()
+    edge_list = tuple(sorted((min(u, v), max(u, v)) for u, v in graph.edges()))
+    internal_vars = [
+        model.NewIntVar(0, 4, f"e_{index}_{u}_{v}")
+        for index, (u, v) in enumerate(edge_list)
+    ]
+    port_vars = [model.NewIntVar(0, 4, f"p_{index}") for index in range(len(port_tuple))]
+
+    incident: dict[int, list[cp_model.IntVar]] = defaultdict(list)
+    for var, (u, v) in zip(internal_vars, edge_list):
+        incident[u].append(var)
+        incident[v].append(var)
+    for port_index, vertex in enumerate(port_tuple):
+        incident[vertex].append(port_vars[port_index])
+
+    for vertex in graph.nodes():
+        if len(incident[vertex]) > 5:
+            raise ValueError(f"vertex {vertex} has total degree above 5")
+        if len(incident[vertex]) > 1:
+            model.AddAllDifferent(incident[vertex])
+
+    return model, port_vars
+
+
+def is_graph_edge_colorable_with_port_constraint(
+    graph: nx.Graph,
+    port_vertices: Iterable[int],
+    port_i: int,
+    port_j: int,
+    *,
+    same_color: bool,
+    time_limit_s: float = 10.0,
+) -> bool:
+    model, port_vars = build_port_coloring_model(graph, port_vertices)
+    if same_color:
+        model.Add(port_vars[port_i] == port_vars[port_j])
+    else:
+        model.Add(port_vars[port_i] != port_vars[port_j])
+
+    solver = cp_model.CpSolver()
+    solver.parameters.max_time_in_seconds = time_limit_s
+    solver.parameters.num_search_workers = 8
+    status = solver.Solve(model)
+    if status in (cp_model.FEASIBLE, cp_model.OPTIMAL):
+        return True
+    if status == cp_model.INFEASIBLE:
+        return False
+    raise RuntimeError(
+        "CP-SAT did not decide the constrained coloring instance: "
+        f"{solver.StatusName(status)}"
+    )
+
+
+def categorize_port_pairs(
+    graph: nx.Graph,
+    port_vertices: Iterable[int],
+    *,
+    time_limit_s: float = 10.0,
+) -> PortPairCategory:
+    port_tuple = tuple(port_vertices)
+    counts = Counter()
+
+    for port_i, port_j in itertools.combinations(range(len(port_tuple)), 2):
+        same_possible = is_graph_edge_colorable_with_port_constraint(
+            graph,
+            port_tuple,
+            port_i,
+            port_j,
+            same_color=True,
+            time_limit_s=time_limit_s,
+        )
+        different_possible = is_graph_edge_colorable_with_port_constraint(
+            graph,
+            port_tuple,
+            port_i,
+            port_j,
+            same_color=False,
+            time_limit_s=time_limit_s,
+        )
+
+        if same_possible and different_possible:
+            counts["flexible"] += 1
+        elif same_possible:
+            counts["forced_same"] += 1
+        elif different_possible:
+            counts["forced_different"] += 1
+        else:
+            counts["blocked"] += 1
+
+    return PortPairCategory(
+        forced_same=counts["forced_same"],
+        forced_different=counts["forced_different"],
+        flexible=counts["flexible"],
+        blocked=counts["blocked"],
+    )
+
+
+def graph_to_plain_graph6(graph: nx.Graph) -> str:
+    return nx.to_graph6_bytes(graph, header=False).decode().strip()
 
 
 def is_5_edge_colorable(gadget: Gadget5Pole, *, time_limit_s: float = 10.0) -> bool:
