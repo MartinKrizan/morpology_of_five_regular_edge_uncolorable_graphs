@@ -1,77 +1,10 @@
 import networkx as nx
 from ortools.sat.python import cp_model
 
+
 def normalize_edge(u, v):
     """Ensure consistent undirected edge key."""
     return (u, v) if u < v else (v, u)
-
-def is_edge_k_colorable(G, k, time_limit_s=10, solver=None, break_symmetry=True):
-    """Check if undirected graph G is edge k-colorable using CP-SAT."""
-    if not G.edges():
-        return True, {}
-
-    # 1. Early exits based on Graph Theory
-    degrees = [d for n, d in G.degree()]
-    max_degree = max(degrees) if degrees else 0
-    
-    # Vizing's theorem: Δ <= χ'(G) <= Δ + 1
-    if k < max_degree:
-        return False, None
-    
-    # Bipartite graphs: χ'(G) = Δ
-    if nx.is_bipartite(G):
-        if k >= max_degree:
-            # We could return True here, but if the user wants an assignment, 
-            # we may still need to run the solver or use a bipartite matching algorithm.
-            # For now, let's just let the solver handle the assignment if k >= max_degree.
-            pass
-
-    model = cp_model.CpModel()
-
-    # create variable for each undirected edge
-    color = {}
-    edge_list = list(G.edges())
-    for u, v in edge_list:
-        e = normalize_edge(u, v)
-        color[e] = model.NewIntVar(0, k - 1, f"c_{e[0]}_{e[1]}")
-    
-    if break_symmetry:
-        # 2. Symmetry Breaking: Fix colors of edges incident to the first vertex
-        # This reduces the search space by fixing one set of constraints.
-        first_node = next(iter(G.nodes()))
-        for i, neighbor in enumerate(G.neighbors(first_node)):
-            if i < k:
-                e = normalize_edge(first_node, neighbor)
-                model.Add(color[e] == i)
-
-    # 3. Use AddAllDifferent for incident edges
-    for v in G.nodes():
-        incident = [color[normalize_edge(v, u)] for u in G.neighbors(v)]
-        if len(incident) > 1:
-            model.AddAllDifferent(incident)
-
-    if solver is None:
-        solver = cp_model.CpSolver()
-        solver.parameters.max_time_in_seconds = time_limit_s
-        solver.parameters.num_search_workers = 1
-
-    status = solver.Solve(model)
-
-    if status in (cp_model.FEASIBLE, cp_model.OPTIMAL):
-        assignment = {e: solver.Value(color[e]) for e in color}
-        # verify correctness
-        for v in G.nodes():
-            used = set()
-            for u in G.neighbors(v):
-                e = normalize_edge(u, v)
-                c = assignment[e]
-                if c in used:
-                    print(f"❌ invalid edge coloring at vertex {v} color {c}")
-                    return False, assignment
-                used.add(c)
-        return True, assignment
-    else:
-        return False, None
 
 
 def normalize_multiedge(u, v, key):
@@ -79,65 +12,265 @@ def normalize_multiedge(u, v, key):
     return (u, v, key) if u < v else (v, u, key)
 
 
-def is_multigraph_edge_k_colorable(G, k, time_limit_s=10, solver=None, break_symmetry=True):
+def _is_sat_status(status):
+    return status in (cp_model.FEASIBLE, cp_model.OPTIMAL)
+
+
+def _max_degree(G):
+    return max((degree for _, degree in G.degree()), default=0)
+
+
+def _exceeds_matching_capacity(G, k):
+    return G.number_of_edges() > k * (G.number_of_nodes() // 2)
+
+
+def _make_solver(time_limit_s, solver, num_search_workers):
+    if solver is not None:
+        return solver
+
+    solver = cp_model.CpSolver()
+    solver.parameters.max_time_in_seconds = time_limit_s
+    solver.parameters.num_search_workers = num_search_workers
+    return solver
+
+
+def _verify_assignment(incident_edges_by_node, assignment):
+    for node, incident_edges in incident_edges_by_node.items():
+        used = set()
+        for edge in incident_edges:
+            color = assignment[edge]
+            if color in used:
+                print(f"invalid edge coloring at vertex {node} color {color}")
+                return False
+            used.add(color)
+    return True
+
+
+def _add_symmetry_breaking(
+    model,
+    edge_vars,
+    incident_edges_by_node,
+    fixed_node,
+    k,
+    encoding,
+):
+    for color, edge in enumerate(incident_edges_by_node[fixed_node]):
+        if color >= k:
+            break
+        if encoding == "bool":
+            model.Add(edge_vars[(edge, color)] == 1)
+        else:
+            model.Add(edge_vars[edge] == color)
+
+
+def _build_bool_model(edge_list, incident_edges_by_node, k, break_symmetry, fixed_node):
+    model = cp_model.CpModel()
+    edge_vars = {}
+
+    for edge in edge_list:
+        color_vars = []
+        for color in range(k):
+            var = model.NewBoolVar(f"e_{len(edge_vars)}")
+            edge_vars[(edge, color)] = var
+            color_vars.append(var)
+        model.AddExactlyOne(color_vars)
+
+    for incident_edges in incident_edges_by_node.values():
+        if len(incident_edges) < 2:
+            continue
+        for color in range(k):
+            model.AddAtMostOne(edge_vars[(edge, color)] for edge in incident_edges)
+
+    if break_symmetry and edge_list:
+        _add_symmetry_breaking(
+            model,
+            edge_vars,
+            incident_edges_by_node,
+            fixed_node,
+            k,
+            "bool",
+        )
+
+    return model, edge_vars
+
+
+def _build_int_model(edge_list, incident_edges_by_node, k, break_symmetry, fixed_node):
+    model = cp_model.CpModel()
+    edge_vars = {
+        edge: model.NewIntVar(0, k - 1, f"c_{'_'.join(map(str, edge))}")
+        for edge in edge_list
+    }
+
+    if break_symmetry and edge_list:
+        _add_symmetry_breaking(
+            model,
+            edge_vars,
+            incident_edges_by_node,
+            fixed_node,
+            k,
+            "int",
+        )
+
+    for incident_edges in incident_edges_by_node.values():
+        if len(incident_edges) > 1:
+            model.AddAllDifferent(edge_vars[edge] for edge in incident_edges)
+
+    return model, edge_vars
+
+
+def _solve_edge_coloring(
+    edge_list,
+    incident_edges_by_node,
+    k,
+    time_limit_s,
+    solver,
+    break_symmetry,
+    encoding,
+    return_assignment,
+    verify_assignment,
+    num_search_workers,
+):
+    fixed_node = max(
+        incident_edges_by_node,
+        key=lambda node: len(incident_edges_by_node[node]),
+    )
+
+    if encoding == "bool":
+        model, edge_vars = _build_bool_model(
+            edge_list,
+            incident_edges_by_node,
+            k,
+            break_symmetry,
+            fixed_node,
+        )
+    elif encoding == "int":
+        model, edge_vars = _build_int_model(
+            edge_list,
+            incident_edges_by_node,
+            k,
+            break_symmetry,
+            fixed_node,
+        )
+    else:
+        raise ValueError(f"unknown edge coloring encoding: {encoding}")
+
+    solver = _make_solver(time_limit_s, solver, num_search_workers)
+    status = solver.Solve(model)
+
+    if not _is_sat_status(status):
+        return False, None
+
+    if not return_assignment:
+        return True, {}
+
+    if encoding == "bool":
+        assignment = {}
+        for edge in edge_list:
+            for color in range(k):
+                if solver.BooleanValue(edge_vars[(edge, color)]):
+                    assignment[edge] = color
+                    break
+    else:
+        assignment = {edge: solver.Value(edge_vars[edge]) for edge in edge_list}
+
+    if verify_assignment and not _verify_assignment(incident_edges_by_node, assignment):
+        return False, assignment
+
+    return True, assignment
+
+
+def is_edge_k_colorable(
+    G,
+    k,
+    time_limit_s=10,
+    solver=None,
+    break_symmetry=True,
+    return_assignment=True,
+    verify_assignment=True,
+    encoding="int",
+):
+    """Check if undirected graph G is edge k-colorable using CP-SAT."""
+    if not G.edges():
+        return True, {}
+
+    max_degree = _max_degree(G)
+    if k < max_degree:
+        return False, None
+
+    if _exceeds_matching_capacity(G, k):
+        return False, None
+
+    if not return_assignment:
+        if nx.is_bipartite(G):
+            return True, {}
+
+        # Vizing's theorem: every simple graph is edge-colorable with
+        # max_degree + 1 colors.
+        if k >= max_degree + 1:
+            return True, {}
+
+    edge_list = [normalize_edge(u, v) for u, v in G.edges()]
+    incident_edges_by_node = {
+        node: [normalize_edge(node, neighbor) for neighbor in G.neighbors(node)]
+        for node in G.nodes()
+    }
+
+    return _solve_edge_coloring(
+        edge_list,
+        incident_edges_by_node,
+        k,
+        time_limit_s,
+        solver,
+        break_symmetry,
+        encoding,
+        return_assignment,
+        verify_assignment,
+        num_search_workers=1,
+    )
+
+
+def is_multigraph_edge_k_colorable(
+    G,
+    k,
+    time_limit_s=10,
+    solver=None,
+    break_symmetry=True,
+    return_assignment=True,
+    verify_assignment=True,
+    encoding="int",
+):
     """Check if undirected multigraph G is edge k-colorable using CP-SAT."""
     if not G.edges():
         return True, {}
 
-    # 1. Early exits based on Graph Theory
-    degrees = [d for n, d in G.degree()]
-    max_degree = max(degrees) if degrees else 0
-    
-    # chromatic index is at least the maximum degree
+    max_degree = _max_degree(G)
     if k < max_degree:
         return False, None
-    
-    # Bipartite graphs: χ'(G) = Δ even for multigraphs (König's line coloring theorem)
-    if nx.is_bipartite(G):
-        if k >= max_degree:
-            pass
 
-    model = cp_model.CpModel()
-
-    # create variable for each undirected multiedge
-    color = {}
-    for u, v, key in G.edges(keys=True):
-        e = normalize_multiedge(u, v, key)
-        color[e] = model.NewIntVar(0, k - 1, f"c_{e[0]}_{e[1]}_{e[2]}")
-    
-    if break_symmetry:
-        # 2. Symmetry Breaking: Fix colors of edges incident to the first vertex
-        first_node = next(iter(G.nodes()))
-        for i, (u, v, key) in enumerate(G.edges(first_node, keys=True)):
-            if i < k:
-                e = normalize_multiedge(u, v, key)
-                model.Add(color[e] == i)
-
-    # 3. Use AddAllDifferent for incident edges
-    for v in G.nodes():
-        incident_vars = [color[normalize_multiedge(x, y, key)] for x, y, key in G.edges(v, keys=True)]
-        if len(incident_vars) > 1:
-            model.AddAllDifferent(incident_vars)
-
-    if solver is None:
-        solver = cp_model.CpSolver()
-        solver.parameters.max_time_in_seconds = time_limit_s
-        solver.parameters.num_search_workers = 8
-
-    status = solver.Solve(model)
-
-    if status in (cp_model.FEASIBLE, cp_model.OPTIMAL):
-        assignment = {e: solver.Value(color[e]) for e in color}
-        # verify correctness
-        for v in G.nodes():
-            used = set()
-            for x, y, key in G.edges(v, keys=True):
-                e = normalize_multiedge(x, y, key)
-                c = assignment[e]
-                if c in used:
-                    print(f"❌ invalid multigraph edge coloring at vertex {v} color {c}")
-                    return False, assignment
-                used.add(c)
-        return True, assignment
-    else:
+    if _exceeds_matching_capacity(G, k):
         return False, None
+
+    if not return_assignment and nx.is_bipartite(G):
+        return True, {}
+
+    edge_list = [normalize_multiedge(u, v, key) for u, v, key in G.edges(keys=True)]
+    incident_edges_by_node = {
+        node: [
+            normalize_multiedge(u, v, key)
+            for u, v, key in G.edges(node, keys=True)
+        ]
+        for node in G.nodes()
+    }
+
+    return _solve_edge_coloring(
+        edge_list,
+        incident_edges_by_node,
+        k,
+        time_limit_s,
+        solver,
+        break_symmetry,
+        encoding,
+        return_assignment,
+        verify_assignment,
+        num_search_workers=8,
+    )

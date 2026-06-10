@@ -29,6 +29,24 @@ def test_edge_colorability_simple_cycle():
     assert len(assignment) == 4
 
 
+def test_edge_colorability_bool_encoding():
+    colorable, assignment = is_edge_k_colorable(nx.cycle_graph(4), 2, encoding="bool")
+
+    assert colorable
+    assert len(assignment) == 4
+
+
+def test_edge_colorability_decision_only_fast_paths():
+    complete_odd = nx.complete_graph(5)
+
+    assert is_edge_k_colorable(complete_odd, 4, return_assignment=False)[0] is False
+    assert is_edge_k_colorable(complete_odd, 5, return_assignment=False) == (True, {})
+    assert is_edge_k_colorable(nx.complete_bipartite_graph(3, 3), 3, return_assignment=False) == (
+        True,
+        {},
+    )
+
+
 def test_multigraph_colorability_accounts_for_parallel_edges():
     graph = nx.MultiGraph()
     graph.add_nodes_from([0, 1])
