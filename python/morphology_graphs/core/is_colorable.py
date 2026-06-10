@@ -53,7 +53,7 @@ def is_edge_k_colorable(G, k, time_limit_s=10, solver=None, break_symmetry=True)
     if solver is None:
         solver = cp_model.CpSolver()
         solver.parameters.max_time_in_seconds = time_limit_s
-        solver.parameters.num_search_workers = 8
+        solver.parameters.num_search_workers = 1
 
     status = solver.Solve(model)
 
