@@ -5,7 +5,7 @@ def normalize_edge(u, v):
     """Ensure consistent undirected edge key."""
     return (u, v) if u < v else (v, u)
 
-def is_edge_k_colorable(G, k, time_limit_s=10, solver=None):
+def is_edge_k_colorable(G, k, time_limit_s=10, solver=None, break_symmetry=True):
     """Check if undirected graph G is edge k-colorable using CP-SAT."""
     if not G.edges():
         return True, {}
@@ -35,13 +35,14 @@ def is_edge_k_colorable(G, k, time_limit_s=10, solver=None):
         e = normalize_edge(u, v)
         color[e] = model.NewIntVar(0, k - 1, f"c_{e[0]}_{e[1]}")
     
-    # 2. Symmetry Breaking: Fix colors of edges incident to the first vertex
-    # This reduces the search space by fixing one set of constraints.
-    first_node = next(iter(G.nodes()))
-    for i, neighbor in enumerate(G.neighbors(first_node)):
-        if i < k:
-            e = normalize_edge(first_node, neighbor)
-            model.Add(color[e] == i)
+    if break_symmetry:
+        # 2. Symmetry Breaking: Fix colors of edges incident to the first vertex
+        # This reduces the search space by fixing one set of constraints.
+        first_node = next(iter(G.nodes()))
+        for i, neighbor in enumerate(G.neighbors(first_node)):
+            if i < k:
+                e = normalize_edge(first_node, neighbor)
+                model.Add(color[e] == i)
 
     # 3. Use AddAllDifferent for incident edges
     for v in G.nodes():
@@ -78,7 +79,7 @@ def normalize_multiedge(u, v, key):
     return (u, v, key) if u < v else (v, u, key)
 
 
-def is_multigraph_edge_k_colorable(G, k, time_limit_s=10, solver=None):
+def is_multigraph_edge_k_colorable(G, k, time_limit_s=10, solver=None, break_symmetry=True):
     """Check if undirected multigraph G is edge k-colorable using CP-SAT."""
     if not G.edges():
         return True, {}
@@ -104,12 +105,13 @@ def is_multigraph_edge_k_colorable(G, k, time_limit_s=10, solver=None):
         e = normalize_multiedge(u, v, key)
         color[e] = model.NewIntVar(0, k - 1, f"c_{e[0]}_{e[1]}_{e[2]}")
     
-    # 2. Symmetry Breaking: Fix colors of edges incident to the first vertex
-    first_node = next(iter(G.nodes()))
-    for i, (u, v, key) in enumerate(G.edges(first_node, keys=True)):
-        if i < k:
-            e = normalize_multiedge(u, v, key)
-            model.Add(color[e] == i)
+    if break_symmetry:
+        # 2. Symmetry Breaking: Fix colors of edges incident to the first vertex
+        first_node = next(iter(G.nodes()))
+        for i, (u, v, key) in enumerate(G.edges(first_node, keys=True)):
+            if i < k:
+                e = normalize_multiedge(u, v, key)
+                model.Add(color[e] == i)
 
     # 3. Use AddAllDifferent for incident edges
     for v in G.nodes():

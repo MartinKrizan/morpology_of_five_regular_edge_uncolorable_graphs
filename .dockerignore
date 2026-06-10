@@ -8,6 +8,10 @@ __pycache__
 *.egg-info
 build
 dist
+ba-graph/third_party/build
+ba-graph/third_party/build-*
+ba-graph/test/build
+ba-graph/test/build-*
 python/benchmark
 python/functions_d
 RP-Report ZS.pdf
