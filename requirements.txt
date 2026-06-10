@@ -2,3 +2,4 @@ ortools
 networkx
 matplotlib
 numpy
+pytest

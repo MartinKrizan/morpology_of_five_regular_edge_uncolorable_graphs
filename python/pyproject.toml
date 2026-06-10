@@ -26,6 +26,8 @@ filter-by-colorable-cut = "morphology_graphs.cli.filter_by_colorable_cut:main"
 filter-low-con = "morphology_graphs.cli.filter_low_con:main"
 filter-uncol = "morphology_graphs.cli.filter_uncol:main"
 generate-overful = "morphology_graphs.cli.generate_overful:main"
+gadget-categorize = "morphology_graphs.cli.gadget_categorize:main"
+gadget-search = "morphology_graphs.cli.gadget_search:main"
 
 [tool.setuptools.packages.find]
 include = ["morphology_graphs*"]
