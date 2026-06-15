@@ -34,6 +34,12 @@ def generate_overful(n, delta=5):
                 degrees[v] += 1
         
         if G.number_of_edges() >= threshold:
+            low = []
+            for v in G.nodes:
+                if(len(G.edges(v))<5):
+                    low.append(v)
+            for v in low:
+                G.add_edge("a", v)
             return G
             
     return None
