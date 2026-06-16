@@ -1,0 +1,20 @@
+
+Processing ../../data/benchmark/overful_31+1.g6
+python CPsat - colorable:1/2
+ 7.866141515,0.000017210,3.933079362, 7.866158725
+
+Processing ../../data/benchmark/overful_51+1.g6
+python CPsat - colorable:1/2
+ 8.389308251,0.000023938,4.194666094, 8.389332189
+
+Processing ../../data/benchmark/random_30.g6
+python CPsat - colorable:1000/1000
+ 0.000065466,0.000026432,0.000028714, 0.028713799
+
+Processing ../../data/benchmark/uncol_14.g6
+python CPsat - colorable:25/50
+ 0.001591952,0.000010493,0.000691052, 0.034552598
+
+Processing ../../data/benchmark/uncol_16_small.g6
+python CPsat - colorable:100/200
+ 0.010082921,0.000010702,0.001908230, 0.381645919
