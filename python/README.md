@@ -30,7 +30,7 @@ python -m pip install -e './python[dev]'
 - `filter-by-colorable-cut`
 - `filter-low-con`
 - `filter-uncol`
-- `generate-overful`
+- `generate-overfull`
 - `gadget-categorize`
 - `gadget-search`
 

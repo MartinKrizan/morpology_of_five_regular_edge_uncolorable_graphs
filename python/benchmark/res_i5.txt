@@ -1,9 +1,9 @@
 
-Processing ../../data/benchmark/overful_31+1.g6
+Processing ../../data/benchmark/overfull_31+1.g6
 python CPsat - colorable:1/2
  7.866141515,0.000017210,3.933079362, 7.866158725
 
-Processing ../../data/benchmark/overful_51+1.g6
+Processing ../../data/benchmark/overfull_51+1.g6
 python CPsat - colorable:1/2
  8.389308251,0.000023938,4.194666094, 8.389332189
 

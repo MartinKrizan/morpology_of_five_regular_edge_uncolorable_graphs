@@ -25,7 +25,7 @@ check-overfull = "morphology_graphs.cli.check_overfull:main"
 filter-by-colorable-cut = "morphology_graphs.cli.filter_by_colorable_cut:main"
 filter-low-con = "morphology_graphs.cli.filter_low_con:main"
 filter-uncol = "morphology_graphs.cli.filter_uncol:main"
-generate-overful = "morphology_graphs.cli.generate_overful:main"
+generate-overfull = "morphology_graphs.cli.generate_overfull:main"
 gadget-categorize = "morphology_graphs.cli.gadget_categorize:main"
 gadget-search = "morphology_graphs.cli.gadget_search:main"
 

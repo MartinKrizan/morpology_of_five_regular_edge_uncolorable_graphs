@@ -1,5 +1,6 @@
 import networkx as nx
 
+
 def replace_multiedge_vertices_with_k5(G):
     """
     Repeatedly replaces vertices that are incident to a multiedge with a K5.
@@ -22,7 +23,7 @@ def replace_multiedge_vertices_with_k5(G):
             
         incident_edges = list(H.edges(target_v, keys=True))
         
-        # We need exactly 5 edges incident to target_v for this to work as a 5-regular preserving substitution
+        # Exactly 5 incident edges are needed for a 5-regular-preserving substitution.
         if len(incident_edges) != 5:
             raise ValueError(f"Vertex {target_v} does not have degree 5 (has {len(incident_edges)}).")
             

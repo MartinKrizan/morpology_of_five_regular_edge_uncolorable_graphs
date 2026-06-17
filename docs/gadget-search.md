@@ -61,7 +61,7 @@ checks, OR-Tools CP-SAT for edge-coloring constraints, and nauty command-line
 tools from the Docker image for graph generation.
 
 The CLI is exposed through the same `[project.scripts]` mechanism as `chcol`,
-`filter-uncol`, and `generate-overful`.
+`filter-uncol`, and `generate-overfull`.
 
 ## Gadget Representation
 

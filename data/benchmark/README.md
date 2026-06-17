@@ -11,7 +11,7 @@ This directory contains graph instances used by the solver benchmarks in
   5-regular graphs on 16 vertices.
 - [`random_30.g6`](random_30.g6) - random 5-regular graph instances on 30
   vertices.
-- [`overful_31+1.g6`](overful_31+1.g6) - overfull-derived benchmark instance.
-- [`overful_51+1.g6`](overful_51+1.g6) - overfull-derived benchmark instance.
+- [`overfull_31+1.g6`](overfull_31+1.g6) - overfull-derived benchmark instance.
+- [`overfull_51+1.g6`](overfull_51+1.g6) - overfull-derived benchmark instance.
 
 All files are graph6 unless stated otherwise.

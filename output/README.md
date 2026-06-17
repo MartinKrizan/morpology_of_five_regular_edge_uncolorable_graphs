@@ -11,7 +11,7 @@ repository.
 The category filenames encode the number of port pairs in each relation class:
 
 ```text
-same_<n>__different_<n>__flexible_<n>__blocked_<n>.g6
+n<order>p<ports>_s<same>d<different>f<flexible>b<blocked>.g6
 ```
 
 Regenerate category files with:

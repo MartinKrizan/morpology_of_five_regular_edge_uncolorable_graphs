@@ -68,7 +68,7 @@ One construction direction is to generate overfull graphs with maximum degree at
 most 5 on an odd number of vertices, then add vertices and edges until the graph
 is 5-regular.
 
-The command `generate-overful` generates overfull candidates with maximum degree
+The command `generate-overfull` generates overfull candidates with maximum degree
 at most 5 on odd vertex counts.
 
 Open task: add or document a script that completes such candidates to

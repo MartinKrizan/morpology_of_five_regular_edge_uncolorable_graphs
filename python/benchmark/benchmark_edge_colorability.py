@@ -31,7 +31,13 @@ def parse_args():
 
 def timed_colorability_check(graph, k, solver):
     start = time.perf_counter()
-    colorable, _ = is_edge_k_colorable(graph, k, return_assignment=False, verify_assignment=False, solver=solver)
+    colorable, _ = is_edge_k_colorable(
+        graph,
+        k,
+        return_assignment=False,
+        verify_assignment=False,
+        solver=solver,
+    )
     return colorable, time.perf_counter() - start
 
 
@@ -50,12 +56,12 @@ def benchmark_graph(graph, k, solver):
     return expected_colorable, min(measurements)
 
 
-def print_summary(k, best_times, colorable_count, total):
+def print_summary(best_times, colorable_count, total):
     if not best_times:
-        print(f"k={k}: no graphs")
+        print("no graphs")
         return
 
-    print(f"python CPsat - colorable:{colorable_count}/{total}")
+    print(f"python CP-SAT - colorable:{colorable_count}/{total}")
     print(f" {max(best_times):.9f},{min(best_times):.9f},{statistics.fmean(best_times):.9f}, {sum(best_times):.9f}")
 
 
@@ -81,14 +87,13 @@ def main():
                 colorable_counts_by_k[k] += 1
 
     best_times = []
-    col =0
+    colorable_total = 0
 
     for k in COLOR_COUNTS:
-        best_times = best_times + best_times_by_k[k]
-        col = col + colorable_counts_by_k[k]
+        best_times.extend(best_times_by_k[k])
+        colorable_total += colorable_counts_by_k[k]
 
-
-    print_summary(k, best_times, col, len(best_times))
+    print_summary(best_times, colorable_total, len(best_times))
 
     return 0
 

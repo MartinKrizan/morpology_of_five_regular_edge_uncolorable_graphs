@@ -1,11 +1,11 @@
 
-Processing ../../data/benchmark/overful_31+1.g6
+Processing ../../data/benchmark/overfull_31+1.g6
 python CPsat - colorable:1/2
  5.595048506,0.000012724,2.797530615, 5.595061230
 kissat
  45.272630856,0.000642226,22.636636541,45.273273082
 
-Processing ../../data/benchmark/overful_51+1.g6
+Processing ../../data/benchmark/overfull_51+1.g6
 python CPsat - colorable:1/2
  10.001693394,0.000018610,5.000856002, 10.001712004
 kissat

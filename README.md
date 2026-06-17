@@ -39,7 +39,7 @@ external graph-generation tools.
 
 ```sh
 docker compose build
-docker compose run --rm python generate-overful 9 --count 3
+docker compose run --rm python generate-overfull 9 --count 3
 ```
 
 ## Command-Line Tools
@@ -51,7 +51,7 @@ The package exposes these commands:
 - `filter-by-colorable-cut` - filter graphs by colorability after cuts.
 - `filter-low-con` - filter graphs by low edge connectivity.
 - `filter-uncol` - keep graphs that are not edge-colorable with 5 colors.
-- `generate-overful` - generate overfull graph candidates.
+- `generate-overfull` - generate overfull graph candidates.
 - `gadget-categorize` - group generated 5-poles by port-pair constraints.
 - `gadget-search` - search for 5-pole gadgets with boundary-signature data.
 
@@ -94,6 +94,4 @@ Longer research notes are kept separate from the quickstart:
 - [`docs/research-notes.md`](docs/research-notes.md)
 - [`docs/gadget-search.md`](docs/gadget-search.md)
 
-Some filenames still use the older spelling `overful` because that spelling is
-part of existing script and data names. In prose, the documentation uses the
-standard term `overfull`.
+All commands, files, and prose use the standard term `overfull`.
