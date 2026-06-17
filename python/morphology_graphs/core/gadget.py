@@ -455,7 +455,14 @@ def is_5_edge_colorable(gadget: Gadget5Pole, *, time_limit_s: float = 10.0) -> b
     solver.parameters.max_time_in_seconds = time_limit_s
     solver.parameters.num_search_workers = 8
     status = solver.Solve(model)
-    return status in (cp_model.FEASIBLE, cp_model.OPTIMAL)
+    if status in (cp_model.FEASIBLE, cp_model.OPTIMAL):
+        return True
+    if status == cp_model.INFEASIBLE:
+        return False
+    raise RuntimeError(
+        "CP-SAT did not decide the 5-edge-coloring instance: "
+        f"{solver.StatusName(status)}"
+    )
 
 
 def enumerate_port_color_signatures(

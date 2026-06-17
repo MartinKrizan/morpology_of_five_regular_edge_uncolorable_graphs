@@ -1,7 +1,10 @@
 import json
 
 import networkx as nx
+import pytest
+from ortools.sat.python import cp_model
 
+from morphology_graphs.core import gadget as gadget_module
 from morphology_graphs.core.gadget import (
     CandidateResult,
     Gadget5Pole,
@@ -20,6 +23,17 @@ from morphology_graphs.core.gadget import (
     validate_degree_5,
     validate_gadget,
 )
+
+
+class UnknownSolver:
+    def __init__(self):
+        self.parameters = type("Parameters", (), {})()
+
+    def Solve(self, model):
+        return cp_model.UNKNOWN
+
+    def StatusName(self, status):
+        return "UNKNOWN"
 
 
 def test_degree_validation_accepts_single_vertex_five_port_gadget():
@@ -45,6 +59,13 @@ def test_boundary_enumeration_returns_permutation_signatures():
     assert not enumeration.complete
     assert all(sorted(signature) == [0, 1, 2, 3, 4] for signature in enumeration.signatures)
     assert is_5_edge_colorable(gadget)
+
+
+def test_gadget_colorability_unknown_status_is_not_unsat(monkeypatch):
+    monkeypatch.setattr(gadget_module.cp_model, "CpSolver", UnknownSolver)
+
+    with pytest.raises(RuntimeError, match="UNKNOWN"):
+        is_5_edge_colorable(Gadget5Pole.from_parts(1, [], [0, 0, 0, 0, 0]))
 
 
 def test_signature_set_canonicalization_uses_global_color_renaming():

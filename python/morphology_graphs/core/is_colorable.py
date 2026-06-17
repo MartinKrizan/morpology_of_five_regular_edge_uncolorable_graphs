@@ -16,6 +16,13 @@ def _is_sat_status(status):
     return status in (cp_model.FEASIBLE, cp_model.OPTIMAL)
 
 
+def _status_name(solver, status):
+    status_name = getattr(solver, "StatusName", None)
+    if status_name is None:
+        return str(status)
+    return status_name(status)
+
+
 def _max_degree(G):
     return max((degree for _, degree in G.degree()), default=0)
 
@@ -157,8 +164,14 @@ def _solve_edge_coloring(
     solver = _make_solver(time_limit_s, solver, num_search_workers)
     status = solver.Solve(model)
 
-    if not _is_sat_status(status):
+    if status == cp_model.INFEASIBLE:
         return False, None
+
+    if not _is_sat_status(status):
+        raise RuntimeError(
+            "CP-SAT did not decide the edge-coloring instance: "
+            f"{_status_name(solver, status)}"
+        )
 
     if not return_assignment:
         return True, {}

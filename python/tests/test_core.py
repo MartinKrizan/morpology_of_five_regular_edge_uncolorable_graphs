@@ -1,4 +1,6 @@
 import networkx as nx
+import pytest
+from ortools.sat.python import cp_model
 
 from morphology_graphs.core.is_colorable import (
     is_edge_k_colorable,
@@ -7,6 +9,14 @@ from morphology_graphs.core.is_colorable import (
 from morphology_graphs.core.k5_substitution import replace_multiedge_vertices_with_k5
 from morphology_graphs.core.multicode import parse_multicode
 from morphology_graphs.core.overfull import is_overfull
+
+
+class UnknownSolver:
+    def Solve(self, model):
+        return cp_model.UNKNOWN
+
+    def StatusName(self, status):
+        return "UNKNOWN"
 
 
 def test_parse_multicode_preserves_parallel_edges():
@@ -36,6 +46,11 @@ def test_edge_colorability_bool_encoding():
     assert len(assignment) == 4
 
 
+def test_edge_colorability_unknown_status_is_not_unsat():
+    with pytest.raises(RuntimeError, match="UNKNOWN"):
+        is_edge_k_colorable(nx.cycle_graph(4), 2, solver=UnknownSolver())
+
+
 def test_edge_colorability_decision_only_fast_paths():
     complete_odd = nx.complete_graph(5)
 
@@ -54,6 +69,15 @@ def test_multigraph_colorability_accounts_for_parallel_edges():
 
     assert is_multigraph_edge_k_colorable(graph, 2)[0] is False
     assert is_multigraph_edge_k_colorable(graph, 3)[0] is True
+
+
+def test_multigraph_colorability_unknown_status_is_not_unsat():
+    graph = nx.MultiGraph()
+    graph.add_nodes_from([0, 1, 2, 3])
+    graph.add_edges_from([(0, 1), (1, 2), (2, 3), (3, 0)])
+
+    with pytest.raises(RuntimeError, match="UNKNOWN"):
+        is_multigraph_edge_k_colorable(graph, 2, solver=UnknownSolver())
 
 
 def test_k5_substitution_removes_multiedge_vertex():
