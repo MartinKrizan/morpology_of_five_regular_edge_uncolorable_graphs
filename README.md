@@ -98,5 +98,3 @@ Longer research notes are kept separate from the quickstart:
 
 - [`docs/research-notes.md`](docs/research-notes.md)
 - [`docs/gadget-search.md`](docs/gadget-search.md)
-
-All commands, files, and prose use the standard term `overfull`.
