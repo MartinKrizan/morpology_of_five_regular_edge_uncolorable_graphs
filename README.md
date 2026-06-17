@@ -16,7 +16,6 @@ The project currently focuses on:
 - [`python/`](python/) - installable Python package and command-line tools.
 - [`data/`](data/) - graph lists used by the experiments.
 - [`scripts/`](scripts/) - generation and legacy checking scripts.
-- [`output/`](output/) - generated gadget-category output.
 - [`docs/`](docs/) - research notes and longer explanations.
 - [`python/benchmark/`](python/benchmark/) - benchmark runner and historical results.
 
@@ -97,4 +96,3 @@ See [`LICENSE`](LICENSE) for the full license text.
 Longer research notes are kept separate from the quickstart:
 
 - [`docs/research-notes.md`](docs/research-notes.md)
-- [`docs/gadget-search.md`](docs/gadget-search.md)
