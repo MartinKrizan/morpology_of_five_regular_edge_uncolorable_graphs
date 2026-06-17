@@ -87,6 +87,11 @@ The main data sets are documented under [`data/`](data/):
   multigraph lists with maximum edge multiplicity 2.
 - [`data/benchmark/`](data/benchmark/) contains benchmark graph instances.
 
+## License
+
+This project is licensed under the GNU General Public License v3.0 or later.
+See [`LICENSE`](LICENSE) for the full license text.
+
 ## Notes
 
 Longer research notes are kept separate from the quickstart:
