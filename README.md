@@ -41,6 +41,14 @@ docker compose build
 docker compose run --rm python generate-overfull 9 --count 3
 ```
 
+For running scripts under docker it is useful to switch to bash running in container. 
+Then commands can be executed directly without `docker compose run...` 
+
+```sh
+docker compose up -d --build
+docker compose exec python bash
+```
+
 ## Command-Line Tools
 
 The package exposes these commands:
