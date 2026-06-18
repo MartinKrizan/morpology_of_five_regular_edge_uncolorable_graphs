@@ -46,8 +46,7 @@ edges of `H`. But `C < 5` gives:
 Therefore `H` cannot be edge-colored with 5 colors. Any 5-edge-coloring of `G`
 would restrict to a 5-edge-coloring of `H`, so `G` is also not 5-edge-colorable.
 
-Equivalently, the odd component is overfull with respect to 5 colors. Since
-`Delta(H) <= 5`, it is also overfull in the usual sense:
+Equivalently, the odd component is overfull.
 
 ```math
 |E(H)| > \Delta(H) \left\lfloor \frac{|V(H)|}{2} \right\rfloor
@@ -74,7 +73,7 @@ Choose a vertex `v` incident with a parallel edge. Since the graph is
 e_i = vx_i, \qquad i = 1,\ldots,5
 ```
 
-where some of the vertices `x_i` may be equal. Delete `v`, add five new
+where some of the vertices $`x_i`$ may be equal. Delete `v`, add five new
 vertices $b_1,\ldots,b_5$ inducing a copy of `K5`, and add the five external
 edges:
 
@@ -84,52 +83,48 @@ b_i x_i, \qquad i = 1,\ldots,5.
 
 Repeat this step while parallel edges remain.
 
-## Regularity and Simplicity
+## Regularity
 
-**Regularity:** Each new vertex $b_i$ has 4 neighbors inside the $K_5$ block and 1 external neighbor $x_i$, preserving its degree at 5. Every old vertex $x_i$ maintains its original degree because the deleted edge $vx_i$ is replaced by exactly one edge $b_i x_i$.
+Each new vertex $b_i$ has 4 neighbors inside the $K_5$ block and 1 external neighbor $x_i$, preserving its degree at 5. Every old vertex $x_i$ maintains its original degree because the deleted edge $vx_i$ is replaced by exactly one edge $b_i x_i$.
 
-**Simplicity:** The internal edges of $K_5$ are simple by definition. If $v$ shared parallel edges with a neighbor (e.g., $x_1 = x_2$), the replacement yields edges $b_1 x_1$ and $b_2 x_1$. Because $b_1 \neq b_2$, these edges are not parallel. Thus, the operation introduces no new parallel edges and strictly reduces the number of multi-edges.
+## Simplicity
+
+The internal edges of $K_5$ are simple by definition. If $v$ shared parallel edges with a neighbor (e.g., $x_1 = x_2$), the replacement yields edges $b_1 x_1$ and $b_2 x_1$. Because $b_1 \neq b_2$, these edges are not parallel. Thus, the operation introduces no new parallel edges and lowers the number of them.
 
 ## Edge-Connectivity
 
-Let `G'` be obtained from `G` by one substitution, and let `B` be the inserted
-`K5` block. Cuts are counted with edge multiplicity. Every cut of `G` gives a
-cut of `G'` of the same size by putting all of `B` on the side formerly
-containing `v`. Hence:
+```math
+\lambda(G') = \lambda(G)
+```
+
+$\leq$: Every cut of `G` gives a cut of `G'` of the same size by putting all of `B` on the side formerly containing `v`. Therefor:
 
 ```math
 \lambda(G') \leq \lambda(G)
 ```
 
-For the reverse inequality, take any nontrivial cut of `G'`. If the cut does
-not split `B`, then contracting `B` back to `v` gives a cut of `G` of the same
-size.
+$\geq$: Let `C` be any nontrivial cut of `G'`. If the cut does not split `B`, then contracting `B` back to `v` gives a cut of `G` of the same size.
 
-Now suppose the cut splits `B`. Let the smaller part of the split contain `s`
-vertices of `B`, where $`1 <= s <= 2`$.  
+Now suppose the cut splits `B`. Let `A` be the component that contains smaller part of vertices of `B`, where $`1 <= s <= 2`$ is the number of these vertices.  
 
-If this smaller part contains no vertices
-outside `B`, then the cut has size at least:
+If `A` contains no vertices outside `B`, then the cut must remove all edges to other vertices from B and also `s` external edges. Therefore, cut has size at least:
 
 ```math
 s(5-s) + s \geq 5
 ```
 
-This is at least $`\lambda(G)`$, because every 5-regular graph has
-edge-connectivity at most `5`.
+which preseserves connectivity if $`\lambda(G) = 5`$ or contradicts the fact that `C` is a minimal cut otherwise. Each 5-regular graph contains trivial cut of size 5.
 
-Otherwise, move those `s` block vertices to the other side of the cut. This
-removes `s(5-s)` internal crossing edges of the `K5` block and can change at
-most `s` external edges, since each block vertex has exactly one external edge.
+Otherwise, if `A` contains also other vertices, cut `C` must contain `s(5-s)` internal edges of the `K5` block. Each vertex from `B` is connected to exactly one of those other vertices.  
+After moving all B vertices from A to other side of cut, we get cut `C'` which size is $`|C| - s-(5-s) + s `$ 
+
 Because:
 
 ```math
-s(5-s) \geq s
+s(5-s) > s
 ```
 
-the cut size does not increase. After the move, `B` lies entirely on one side,
-so contracting `B` back to `v` gives a cut of `G` no larger than the original
-cut of `G'`. Therefore:
+the size of `C'` is lower than size of `C` which contradicts the fact that `C` is minimal cut.  Therefore:
 
 ```math
 \lambda(G') \geq \lambda(G)
@@ -148,9 +143,10 @@ G \text{ is 5-edge-colorable } \Longleftrightarrow
 G' \text{ is 5-edge-colorable}.
 ```
 
-$(\Rightarrow)$ Suppose $G$ has a proper 5-edge-coloring. The 5 edges incident with $v$ must receive 5 distinct colors. Assign these identical colors to the 5 external edges of $B$. Because $K_5$ can be 5-edge-colored such that each vertex is missing exactly one unique color, we can permute the internal colors of $B$ so that vertex $b_i$ misses the exact color assigned to its external edge $b_i x_i$. This successfully extends the coloring to $G'$.
+$\Rightarrow$: Suppose $G$ has a proper 5-edge-coloring. The 5 edges incident with $v$ must receive 5 distinct colors. Assign these identical colors to the 5 external edges of $B$. Because $K_5$ can be 5-edge-colored such that each vertex is missing exactly one unique color, we can permute the internal colors of $B$ so that vertex $b_i$ misses the exact color assigned to its external edge $b_i x_i$. 
 
-$(\Leftarrow)$ Suppose $G'$ has a proper 5-edge-coloring. Since $K_5$ contains 10 edges, any 5-edge-coloring forces each color class to be a matching of size exactly 2. This means every color is missing at exactly one vertex of $B$. Consequently, the external edge at each vertex must use that missing color. The 5 external edges therefore receive 5 distinct colors. Contracting $B$ back to $v$ yields a valid 5-edge-coloring of $G$.
+$\Leftarrow$: Suppose $G'$ has a proper 5-edge-coloring. Since $K_5$ contains 10 edges, any 5-edge-coloring forces each color class to be a matching of size exactly 2. This means every color is missing at exactly one vertex of $B$. 
+Therefore the external edge at each vertex must use that missing color. The 5 external edges therefore receive 5 distinct colors. Contracting $B$ back to $v$ yields a valid 5-edge-coloring of $G$.
 
 By induction, the repeated `K5` substitution preserves both edge-connectivity
-and 5-edge-colorability. In particular, it preserves uncolorability.
+and 5-edge-colorability.
