@@ -94,13 +94,20 @@ The main data sets are documented under [`data/`](data/):
   multigraph lists with maximum edge multiplicity 2.
 - [`data/benchmark/`](data/benchmark/) contains benchmark graph instances.
 
-## License
-
-This project is licensed under the GNU General Public License v3.0 or later.
-See [`LICENSE`](LICENSE) for the full license text.
-
 ## Notes
 
 Longer research notes are kept separate from the quickstart:
 
 - [`docs/research-notes.md`](docs/research-notes.md)
+
+
+## License
+
+This project is licensed under the GNU General Public License v3.0 or later.
+See [`LICENSE`](LICENSE) for the full license text.
+
+
+## Statement
+
+During the preparation of this work the author used Codex and Chatgpt in order to generate boilerplate code, tests and documentation. After using this tool/service, the author(s) reviewed and edited the content as needed
+and take(s) full responsibility for the content of the published work.
