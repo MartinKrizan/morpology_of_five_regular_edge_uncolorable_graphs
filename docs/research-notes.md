@@ -8,8 +8,6 @@ Non-isomorphic simple 5-regular edge-uncolorable graph:
 | 14                 | 25    | [`../data/uncol/14v/uncol_14.g6`](../data/uncol/14v/uncol_14.g6)    |
 | 16                 | 2882    | [`../data/uncol/16v/uncol_16.g6`](../data/uncol/16v/uncol_16.g6)    |
 
-
-
 All of them contains cut with size less than 4 that splits graph into two components of odd size. After splitting a graph by
 such cut, one component is always uncolorable. For all of those
 components, uncolorability follows from the component being overfull.
@@ -61,7 +59,7 @@ The command `generate-overfull` generates overfull candidates with maximum degre
 
 # Multigraph to Simple 5-Regular Graphs
 
-This construction transforms 5-regular loopless multigraph to simple graph preserving its edge-connectivity and edge-colorability. 
+This construction transforms 5-regular loopless multigraph to simple graph preserving its edge-connectivity and edge-colorability.
 It is implemented in [replace_multiedge_vertices_with_k5](../python/morphology_graphs/core/k5_substitution.py) function.
 
 ## Steps:
@@ -105,7 +103,7 @@ $\leq$: Every cut of `G` gives a cut of `G'` of the same size by putting all of 
 
 $\geq$: Let `C` be any nontrivial cut of `G'`. If the cut does not split `B`, then contracting `B` back to `v` gives a cut of `G` of the same size.
 
-Now suppose the cut splits `B`. Let `A` be the component that contains smaller part of vertices of `B`, where $`1 <= s <= 2`$ is the number of these vertices.  
+Now suppose the cut splits `B`. Let `A` be the component that contains smaller part of vertices of `B`, where $`1 <= s <= 2`$ is the number of these vertices.
 
 If `A` contains no vertices outside `B`, then the cut must remove all edges to other vertices from B and also `s` external edges. Therefore, cut has size at least:
 
@@ -115,8 +113,8 @@ s(5-s) + s \geq 5
 
 which preseserves connectivity if $`\lambda(G) = 5`$ or contradicts the fact that `C` is a minimal cut otherwise. Each 5-regular graph contains trivial cut of size 5.
 
-Otherwise, if `A` contains also other vertices, cut `C` must contain `s(5-s)` internal edges of the `K5` block. Each vertex from `B` is connected to exactly one of those other vertices.  
-After moving all B vertices from A to other side of cut, we get cut `C'` which size is $`|C| - s-(5-s) + s `$ 
+Otherwise, if `A` contains also other vertices, cut `C` must contain `s(5-s)` internal edges of the `K5` block. Each vertex from `B` is connected to exactly one of those other vertices.
+After moving all B vertices from A to other side of cut, we get cut `C'` which size is $`|C| - s-(5-s) + s `$
 
 Because:
 
@@ -143,9 +141,9 @@ G \text{ is 5-edge-colorable } \Longleftrightarrow
 G' \text{ is 5-edge-colorable}.
 ```
 
-$\Rightarrow$: Suppose $G$ has a proper 5-edge-coloring. The 5 edges incident with $v$ must receive 5 distinct colors. Assign these identical colors to the 5 external edges of $B$. Because $K_5$ can be 5-edge-colored such that each vertex is missing exactly one unique color, we can permute the internal colors of $B$ so that vertex $b_i$ misses the exact color assigned to its external edge $b_i x_i$. 
+$\Rightarrow$: Suppose $G$ has a proper 5-edge-coloring. The 5 edges incident with $v$ must receive 5 distinct colors. Assign these identical colors to the 5 external edges of $B$. Because $K_5$ can be 5-edge-colored such that each vertex is missing exactly one unique color, we can permute the internal colors of $B$ so that vertex $b_i$ misses the exact color assigned to its external edge $b_i x_i$.
 
-$\Leftarrow$: Suppose $G'$ has a proper 5-edge-coloring. Since $K_5$ contains 10 edges, any 5-edge-coloring forces each color class to be a matching of size exactly 2. This means every color is missing at exactly one vertex of $B$. 
+$\Leftarrow$: Suppose $G'$ has a proper 5-edge-coloring. Since $K_5$ contains 10 edges, any 5-edge-coloring forces each color class to be a matching of size exactly 2. This means every color is missing at exactly one vertex of $B$.
 Therefore the external edge at each vertex must use that missing color. The 5 external edges therefore receive 5 distinct colors. Contracting $B$ back to $v$ yields a valid 5-edge-coloring of $G$.
 
 By induction, the repeated `K5` substitution preserves both edge-connectivity
